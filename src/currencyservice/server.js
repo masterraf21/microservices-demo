@@ -149,7 +149,8 @@ function setupTracerAndExporters () {
   // grab Zipkin address from env variables
   const ZIPKIN_SERVICE_ADDR = process.env['ZIPKIN_SERVICE_ADDR'];
   if (!ZIPKIN_SERVICE_ADDR) {
-    throw Error('Unable to start Zipking, please define ZIPKIN_SERVICE_ADDR');
+    console.warn('Unable to start Zipking, please define ZIPKIN_SERVICE_ADDR');
+    return null
   }
   
   const zipkinOptions = {

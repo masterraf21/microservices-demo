@@ -152,6 +152,7 @@
         + config.limits
         + config.requests
         + container.withEnv(config.env + localEnv)
+        + container.withImagePullPolicy("Always")
       ]) 
       + deploy.mixin.metadata.withLabelsMixin(labels)
       + deploy.mixin.metadata.withNamespace(config.namespace)
