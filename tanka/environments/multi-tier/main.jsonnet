@@ -10,8 +10,8 @@
   // tk show environments/multi-tier --dangerous-allow-redirect \
   // -e externalURLs='{}' \
   // -e externalApps='[]' \
-  // -e newProject='""' \
-  // -e newNamespace='""'
+  // -e project='""' \
+  // -e namespace='""'
   // 
   // note the '""' the content inside the '' have to be a valid json object: "" is the empty string
   // 
@@ -19,7 +19,9 @@
   //
   // tk show environments/multi-tier --dangerous-allow-redirect \
   // -e externalURLs='{cartservice: "cart.svc.com:1234", paymentservice: "ici.la:345"}' \
-  // -e externalApps='["rediscart"]'
+  // -e externalApps='["rediscart"]' \
+  // -e project='""' \
+  // -e namespace='""'
   //
   // a better example is to install the frontend alone, calling all services in external URLs:
   // 
@@ -32,7 +34,9 @@
   //    shippingservice: "shippingservice.svc.external.com:443",
   //    checkoutservice: "checkoutservice.svc.external.com:443",
   //    adservice: "adservice.svc.external.com:443",}' \
-  // -e externalApps='["frontend"]'
+  // -e externalApps='["frontend"]' \
+  // -e project='""' \
+  // -e namespace='""'
 
   // use an external value to create URLs
   externalURLs:: std.extVar('externalURLs'),
