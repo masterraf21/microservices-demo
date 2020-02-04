@@ -18,9 +18,7 @@
         tag: "v0.1.3"
       },
       labels: {app: "adservice"},
-      env: [
-        {name: "PORT", value: "%s" % $._config.adservice.port},
-      ],
+      env: {PORT: "%s" % $._config.adservice.port},
       readinessProbe: container.mixin.readinessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port ]),
       livenessProbe: container.mixin.livenessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port ]),
       limits: container.mixin.resources.withLimits({cpu: "300m", memory: "300Mi"}),

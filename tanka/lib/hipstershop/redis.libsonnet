@@ -19,7 +19,7 @@
         tag: "alpine"
       },
       labels: {app: "redis-cart"},
-      env: [],
+      env: {},
       emptyVolumeMounts: {
           name: "redis-data",
           mountPath: "/data"

@@ -18,13 +18,12 @@
         tag: "v0.1.3"
       },
       labels: {app: "loadgenerator"},
-      env: [
-        {name: "FRONTEND_ADDR", value: "http://%s" % $._config.frontend.URL},
-        {name: "USERS", value: "10"},
-        // for external HTTPS
-        // {name: "FRONTEND_ADDR", value: "https://hipstershop1.tetrate.io:443"},
-        // {name: "FRONTEND_IP", value: "104.198.1.148"},
-      ],
+      env: {
+        FRONTEND_ADDR: "http://%s" % $._config.frontend.URL,
+        USERS: "10",
+        // FRONTEND_ADDR: "https://hipstershop1.tetrate.io:443",
+        // FRONTEND_IP: "104.198.1.148",
+    },
       readinessProbe: {},
       livenessProbe: {},
       limits: container.mixin.resources.withLimits({cpu: "500m", memory: "512Mi"}),

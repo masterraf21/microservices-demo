@@ -18,24 +18,35 @@
         tag: "v0.1.3"
       },
       labels: {app: "frontend"},
-      env: [
-        {name: "PORT", value: "%s" % $._config.frontend.port},
-        {name: "PRODUCT_CATALOG_SERVICE_ADDR", value: $._config.productcatalogservice.URL},
-        {name: "CURRENCY_SERVICE_ADDR", value: $._config.currencyservice.URL},
-        {name: "CART_SERVICE_ADDR", value: $._config.cartservice.URL},
-        {name: "RECOMMENDATION_SERVICE_ADDR", value: $._config.recommendationservice.URL},
-        {name: "SHIPPING_SERVICE_ADDR", value: $._config.shippingservice.URL},
-        {name: "CHECKOUT_SERVICE_ADDR", value: $._config.checkoutservice.URL},
-        {name: "AD_SERVICE_ADDR", value: $._config.adservice.URL},
-        // {name: "JAEGER_SERVICE_ADDR", value: "jaeger-collector:14268"},
-      ],
+      // env: [
+      //   PORT: "%s" % $._config.frontend.port},
+      //   PRODUCT_CATALOG_SERVICE_ADDR: $._config.productcatalogservice.URL},
+      //   CURRENCY_SERVICE_ADDR: $._config.currencyservice.URL},
+      //   CART_SERVICE_ADDR: $._config.cartservice.URL},
+      //   RECOMMENDATION_SERVICE_ADDR: $._config.recommendationservice.URL},
+      //   SHIPPING_SERVICE_ADDR: $._config.shippingservice.URL},
+      //   CHECKOUT_SERVICE_ADDR: $._config.checkoutservice.URL},
+      //   AD_SERVICE_ADDR: $._config.adservice.URL},
+      //   // JAEGER_SERVICE_ADDR: "jaeger-collector:14268"},
+      // ],
+      env: {
+        PORT: "%s" % $._config.frontend.port,
+        PRODUCT_CATALOG_SERVICE_ADDR: $._config.productcatalogservice.URL,
+        CURRENCY_SERVICE_ADDR: $._config.currencyservice.URL,
+        CART_SERVICE_ADDR: $._config.cartservice.URL,
+        RECOMMENDATION_SERVICE_ADDR: $._config.recommendationservice.URL,
+        SHIPPING_SERVICE_ADDR: $._config.shippingservice.URL,
+        CHECKOUT_SERVICE_ADDR: $._config.checkoutservice.URL,
+        AD_SERVICE_ADDR: $._config.adservice.URL,
+        // JAEGER_SERVICE_ADDR: "jaeger-collector:14268",
+      },
       readinessProbe: container.mixin.readinessProbe.httpGet.withPath("/_healthz")
         + container.mixin.readinessProbe.httpGet.withPort(self.port)
-        + container.mixin.readinessProbe.httpGet.withHttpHeaders({name: "Cookie", value: "shop_session-id=x-readiness-probe"},)
-        + container.mixin.readinessProbe.withInitialDelaySeconds(10)
+        + container.mixin.readinessProbe.httpGet.withHttpHeaders($.envList({Cookie: "shop_session-id=x-readiness-probe"}),)
+        + container.mixin.readinessProbe.withInitialDelaySeconds(10),
       livenessProbe: container.mixin.livenessProbe.httpGet.withPath("/_healthz")
         + container.mixin.livenessProbe.httpGet.withPort(self.port)
-        + container.mixin.livenessProbe.httpGet.withHttpHeaders({name: "Cookie", value: "shop_session-id=x-readiness-probe"},)
+        + container.mixin.livenessProbe.httpGet.withHttpHeaders($.envList({Cookie: "shop_session-id=x-readiness-probe"}),)
         + container.mixin.livenessProbe.withInitialDelaySeconds(10),
       limits: {},
       requests: {},

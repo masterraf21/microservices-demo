@@ -11,125 +11,97 @@
 (import "hipstershop/redis.libsonnet") +
 (import "hipstershop/loadgenerator.libsonnet") +
 {
+// global functions
 
-  // we init this variable to be used when defining URL on the CLI
-  externalURLs:: {},
+  // envList transforms a {foo: "bar", tic: "tac"} into an array of [{name: "foo", value: "bar"},{name: "tic", value: "tac"},],
+  envList(map):: [
+    if std.type(map[x]) == "object" then { name: x, valueFrom: map[x] } else { name: x, value: map[x] }
+    for x in std.objectFields(map)
+  ],
 
   // set Deployments defaults
   _config+:: {
     repo: "gcr.io/google-samples/microservices-demo",
-    adservice+: {
-      // compute the URL to reach this service
-      URL: if std.objectHas($.externalURLs, self.app) then $.externalURLs[self.app] else "%s.%s:%s" % [self.app, self.namespace, self.port],
 
-      deployments: [
-        {name: "adservice", version: "v1", withSvc: true, localEnv:[], replica: 1},
-      ],
+    // define defaults values to add to each micro-service
+    default+: {
+      URL:  "%s.%s:%s" % [self.app, self.namespace, self.port],
+      env+: {
+        ZIPKIN_SERVICE_ADDR: "zipkin.tcc:9411",
       },
-    cartservice+: {
-      // compute the URL to reach this service
-      URL: if std.objectHas($.externalURLs, self.app) then $.externalURLs[self.app] else "%s.%s:%s" % [self.app, self.namespace, self.port],
-
-      deployments: [
-        {name: "cartservice", version: "v1", withSvc: true, localEnv:[], replica: 1},
-      ],
     },
+
+    adservice+: {
+      deployments: [
+        {name: "adservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
+      ],
+      } + $._config.default,
+
+    cartservice+: {
+      deployments: [
+        {name: "cartservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
+      ],
+    } + $._config.default,
+
     checkoutservice+: {
-      // compute the URL to reach this service
-      URL: if std.objectHas($.externalURLs, self.app) then $.externalURLs[self.app] else "%s.%s:%s" % [self.app, self.namespace, self.port],
-
       deployments: [
-        {name: "checkoutservice", version: "v1", withSvc: true, localEnv:[], replica: 1},
+        {name: "checkoutservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
       ],
-    }, 
+    } + $._config.default, 
+
     currencyservice+: {
-      // compute the URL to reach this service
-      URL: if std.objectHas($.externalURLs, self.app) then $.externalURLs[self.app] else "%s.%s:%s" % [self.app, self.namespace, self.port],
-
-      // define default deployment
       deployments: [
-        {name: "currencyservice", version: "v1", withSvc: true, localEnv:[], replica: 1},
+        {name: "currencyservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
       ],
-    }, 
+    } + $._config.default, 
+
     emailservice+: {
-      // compute the URL to reach this service
-      URL: if std.objectHas($.externalURLs, self.app) then $.externalURLs[self.app] else "%s.%s:%s" % [self.app, self.namespace, self.port],
-
-      // define default deployment
       deployments: [
-        {name: "emailservice", version: "v1", withSvc: true, localEnv:[], replica: 1},
+        {name: "emailservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
       ],
-    }, 
+    } + $._config.default,
+
     frontend+: {
-      // compute the URL to reach this service
-      URL: if std.objectHas($.externalURLs, self.app) then $.externalURLs[self.app] else "%s.%s:%s" % [self.app, self.namespace, self.port],
-
-      // define default deployment
       deployments: [
-        {name: "frontend", version: "v1", withSvc: true, localEnv:[], replica: 1},
+        {name: "frontend", version: "v1", withSvc: true, localEnv:{}, replica: 1},
       ],
-    }, 
+    } + $._config.default,
+
     paymentservice+: {
-      // compute the URL to reach this service
-      URL: if std.objectHas($.externalURLs, self.app) then $.externalURLs[self.app] else "%s.%s:%s" % [self.app, self.namespace, self.port],
-
-      // define default deployment
       deployments: [
-        {name: "paymentservice", version: "v1", withSvc: true, localEnv:[], replica: 1},
+        {name: "paymentservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
       ],
-    }, 
+    } + $._config.default,
+
     productcatalogservice+: {
-      // compute the URL to reach this service
-      URL: if std.objectHas($.externalURLs, self.app) then $.externalURLs[self.app] else "%s.%s:%s" % [self.app, self.namespace, self.port],
-
-      // define default deployment
       deployments: [
-        {name: "productcatalogservice", version: "v1", withSvc: true, localEnv:[], replica: 1},
+        {name: "productcatalogservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
       ],
-    }, 
+    } + $._config.default,
+
     recommendationservice+: {
-      // compute the URL to reach this service
-      URL: if std.objectHas($.externalURLs, self.app) then $.externalURLs[self.app] else "%s.%s:%s" % [self.app, self.namespace, self.port],
-
-      // define default deployment
       deployments: [
-        {name: "recommendationservice", version: "v1", withSvc: true, localEnv:[], replica: 1},
+        {name: "recommendationservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
       ],
-    }, 
+    } + $._config.default,
+
     shippingservice+: {
-      // compute the URL to reach this service
-      URL: if std.objectHas($.externalURLs, self.app) then $.externalURLs[self.app] else "%s.%s:%s" % [self.app, self.namespace, self.port],
-
-      // define default deployment
       deployments: [
-        {name: "shippingservice", version: "v1", withSvc: true, localEnv:[], replica: 1},
+        {name: "shippingservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
       ],
-    }, 
+    } + $._config.default,
+
     rediscart+: {
-      // compute the URL to reach this service
-      URL: if std.objectHas($.externalURLs, self.app) then $.externalURLs[self.app] else "%s.%s:%s" % [self.app, self.namespace, self.port],
-
-      // define default deployment
       deployments: [
-        {name: "redis-cart", version: "v1", withSvc: true, localEnv:[], replica: 1},
+        {name: "redis-cart", version: "v1", withSvc: true, localEnv:{}, replica: 1},
       ],
-    }, 
+    } + $._config.default,
+
     loadgenerator+: {
-      // compute the URL to reach this service
-      URL: if std.objectHas($.externalURLs, self.app) then $.externalURLs[self.app] else "%s.%s:%s" % [self.app, self.namespace, self.port],
-
-      // define default deployment
       deployments: [
-        {name: "loadgenerator", version: "v1", withSvc: false, localEnv:[], replica: 1},
+        {name: "loadgenerator", version: "v1", withSvc: false, localEnv:{}, replica: 1},
       ],
-
-      // use specific image
-      image: {
-        repo: "prune",
-        name: "loadgenerator",
-        tag: "v0.1.4"
-      },
-    }, 
+    } + $._config.default,
   },
 
   local deploy = $.apps.v1.deployment,
@@ -138,7 +110,7 @@
   local service = $.core.v1.service,
 
   hipstershopApp:: {
-    new(type="", name="", version="v1", replica=1, withSvc=false, localEnv=[]):: {
+    new(type="", name="", version="v1", replica=1, withSvc=false, localEnv={},):: {
       local config = $._config[type],
       
       local labels = config.labels+{version: version, project: $._config.project},
@@ -151,9 +123,10 @@
         + config.readinessProbe
         + config.limits
         + config.requests
-        + container.withEnv(config.env + localEnv)
+        + container.withEnv($.envList(config.env) + $.envList(localEnv))
         + container.withImagePullPolicy("Always")
       ]) 
+      + deploy.mixin.metadata.withLabelsMixin(labels)
       + deploy.mixin.metadata.withLabelsMixin(labels)
       + deploy.mixin.metadata.withNamespace(config.namespace)
       + config.deploymentExtra +

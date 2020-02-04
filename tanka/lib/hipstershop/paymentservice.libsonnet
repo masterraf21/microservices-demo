@@ -18,9 +18,9 @@
         tag: "v0.1.3"
       },
       labels: {app: "paymentservice"},
-      env: [
-        {name: "PORT", value: "%s" % $._config.paymentservice.port},
-      ],
+      env: {
+        PORT: "%s" % $._config.paymentservice.port,
+    },
       readinessProbe: container.mixin.readinessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port,]),
       livenessProbe: container.mixin.livenessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port,]),
       limits: container.mixin.resources.withLimits({cpu: "200m", memory: "128Mi"}),

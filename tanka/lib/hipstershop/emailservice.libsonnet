@@ -18,10 +18,10 @@
         tag: "v0.1.3"
       },
       labels: {app: "emailservice"},
-      env: [
-        {name: "PORT", value: "%s" % $._config.emailservice.port},
-        {name: "ENABLE_PROFILER", value: "0"},
-      ],
+      env: {
+        PORT: "%s" % $._config.emailservice.port,
+        ENABLE_PROFILER: "0",
+    },
       readinessProbe: container.mixin.readinessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port,]),
       livenessProbe: container.mixin.livenessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port,]),
       limits: container.mixin.resources.withLimits({cpu: "200m", memory: "128Mi"}),

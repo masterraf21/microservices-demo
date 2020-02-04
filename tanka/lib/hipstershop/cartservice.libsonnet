@@ -18,11 +18,12 @@
         tag: "v0.1.3"
       },
       labels: {app: "cartservice"},
-      env: [
-        {name: "REDIS_ADDR", value: $._config.rediscart.URL},
-        {name: "PORT", value: "%s" % $._config.cartservice.port},
-        {name: "LISTEN_ADDR", value: "0.0.0.0"},
-      ],
+      env: {
+        REDIS_ADDR: $._config.rediscart.URL,
+        PORT: "%s" % $._config.cartservice.port,
+        LISTEN_ADDR: "0.0.0.0"
+      },
+      
       readinessProbe: container.mixin.readinessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port, "-rpc-timeout=5s"])
                     + container.mixin.readinessProbe.withInitialDelaySeconds(15),
       livenessProbe: container.mixin.livenessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port, "-rpc-timeout=5s"])
