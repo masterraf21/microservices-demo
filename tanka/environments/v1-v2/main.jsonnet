@@ -6,7 +6,7 @@
     namespace: self.project,
     adservice+: {
       deployments+: [
-        {name: "adservice-v2", version: "v2", withSvc: false, replica: 1, localEnv:[]},
+        {name: "adservice-v2", version: "v2", withSvc: false, replica: 1, localEnv:{}},
       ],
     },
     // cartservice+: {
@@ -14,16 +14,14 @@
     // },
     recommendationservice+: {
       deployments: [
-        {name: "recommendationservice", version: "v1", withSvc: true, replica: 2, localEnv:[]},
+        {name: "recommendationservice", version: "v1", withSvc: true, replica: 2, localEnv:{}},
       ],
     },
     productcatalogservice+: {
       // namespace+: "hipstershopsvc1",
-      env+: [
-        {name: "DEMO_DEPLOYMENT_ENV_VAR", value: "none"},
-      ],
+      env+: {DEMO_DEPLOYMENT_ENV_VAR: "none"},
       deployments+: [
-        {name: "productcatalogservice-slow", version: "v2", withSvc: false, replica: 1, localEnv: [{name: "EXTRA_LATENCY", value: "5.5s"}]},
+        {name: "productcatalogservice-slow", version: "v2", withSvc: false, replica: 1, localEnv: {EXTRA_LATENCY: "5.5s"}},
       ]
     }, 
   },
