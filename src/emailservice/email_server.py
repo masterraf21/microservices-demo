@@ -28,32 +28,33 @@ import demo_pb2_grpc
 from grpc_health.v1 import health_pb2
 from grpc_health.v1 import health_pb2_grpc
 
-from opencensus.trace.exporters import stackdriver_exporter
-from opencensus.trace.ext.grpc import server_interceptor
-from opencensus.trace.samplers import always_on
 
-# import googleclouddebugger
-import googlecloudprofiler
+from opencensus.ext.grpc import server_interceptor
+from opencensus.trace.tracer import Tracer
+from opencensus.ext.zipkin.trace_exporter import ZipkinExporter
+from opencensus.trace.samplers import AlwaysOnSampler
 
-try:
-    sampler = always_on.AlwaysOnSampler()
-    exporter = stackdriver_exporter.StackdriverExporter(
-        project_id=os.environ.get('GCP_PROJECT_ID'),
-        transport=AsyncTransport)
-    tracer_interceptor = server_interceptor.OpenCensusServerInterceptor(sampler, exporter)
-except:
-    tracer_interceptor = server_interceptor.OpenCensusServerInterceptor()
-
-# try:
-#     googleclouddebugger.enable(
-#         module='emailserver',
-#         version='1.0.0'
-#     )
-# except:
-#     pass
 
 from logger import getJSONLogger
 logger = getJSONLogger('emailservice-server')
+
+# Setup Zipkin exporter
+try:
+  zipkin_service_addr = os.environ.get("ZIPKIN_SERVICE_ADDR", '')
+  if zipkin_service_addr == "":
+    logger.info("Skipping Zipkin traces initialization. Set environment variable ZIPKIN_SERVICE_ADDR=<host>:<port> to enable.")
+    raise KeyError()
+  host, port = zipkin_service_addr.split(":")
+  ze = ZipkinExporter(service_name="emailservice-server",
+    host_name=host,
+    port=port,
+    endpoint='/api/v2/spans')
+  sampler = AlwaysOnSampler()
+  tracer = Tracer(exporter=ze, sampler=sampler)
+  tracer_interceptor = server_interceptor.OpenCensusServerInterceptor(sampler, ze)
+  logger.info("Zipkin traces enabled, sending to " + zipkin_service_addr)
+except KeyError:
+  tracer_interceptor = server_interceptor.OpenCensusServerInterceptor()
 
 # Loads confirmation email template from file
 env = Environment(
@@ -173,14 +174,4 @@ def initStackdriverProfiling():
 
 if __name__ == '__main__':
   logger.info('starting the email service in dummy mode.')
-  try:
-    enable_profiler = os.environ["ENABLE_PROFILER"]
-    if enable_profiler != "1":
-      raise KeyError()
-    else:
-      initStackdriverProfiling()
-  except KeyError:
-      logger.info("Skipping Stackdriver Profiler Python agent initialization. Set environment variable ENABLE_PROFILER=1 to enable.")
-
-
   start(dummy_mode = True)

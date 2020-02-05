@@ -1,0 +1,1060 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: adservice
+    project: hipstershopv1v2
+    version: v1
+  name: adservice
+  namespace: hipstershopv1v2
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: adservice
+      name: adservice
+      project: hipstershopv1v2
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: adservice
+        name: adservice
+        project: hipstershopv1v2
+        version: v1
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: "9555"
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.tcc:9411
+        image: gcr.io/google-samples/microservices-demo/adservice:v0.1.3
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:9555
+        name: adservice
+        ports:
+        - containerPort: 9555
+          name: grpc
+        readinessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:9555
+        resources:
+          limits:
+            cpu: 300m
+            memory: 300Mi
+          requests:
+            cpu: 200m
+            memory: 180Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: adservice
+    project: hipstershopv1v2
+    version: v2
+  name: adservice-v2
+  namespace: hipstershopv1v2
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: adservice
+      name: adservice-v2
+      project: hipstershopv1v2
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: adservice
+        name: adservice-v2
+        project: hipstershopv1v2
+        version: v2
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: "9555"
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.tcc:9411
+        image: gcr.io/google-samples/microservices-demo/adservice:v0.1.3
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:9555
+        name: adservice-v2
+        ports:
+        - containerPort: 9555
+          name: grpc
+        readinessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:9555
+        resources:
+          limits:
+            cpu: 300m
+            memory: 300Mi
+          requests:
+            cpu: 200m
+            memory: 180Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: cartservice
+    project: hipstershopv1v2
+    version: v1
+  name: cartservice
+  namespace: hipstershopv1v2
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: cartservice
+      name: cartservice
+      project: hipstershopv1v2
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: cartservice
+        name: cartservice
+        project: hipstershopv1v2
+        version: v1
+    spec:
+      containers:
+      - env:
+        - name: LISTEN_ADDR
+          value: 0.0.0.0
+        - name: PORT
+          value: "7070"
+        - name: REDIS_ADDR
+          value: redis-cart.hipstershopv1v2:6379
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.tcc:9411
+        image: gcr.io/google-samples/microservices-demo/cartservice:v0.1.3
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:7070
+            - -rpc-timeout=5s
+          initialDelaySeconds: 15
+        name: cartservice
+        ports:
+        - containerPort: 7070
+          name: grpc
+        readinessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:7070
+            - -rpc-timeout=5s
+          initialDelaySeconds: 15
+        resources:
+          limits:
+            cpu: 300m
+            memory: 128Mi
+          requests:
+            cpu: 200m
+            memory: 64Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: checkoutservice
+    project: hipstershopv1v2
+    version: v1
+  name: checkoutservice
+  namespace: hipstershopv1v2
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: checkoutservice
+      name: checkoutservice
+      project: hipstershopv1v2
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: checkoutservice
+        name: checkoutservice
+        project: hipstershopv1v2
+        version: v1
+    spec:
+      containers:
+      - env:
+        - name: CART_SERVICE_ADDR
+          value: cartservice.hipstershopv1v2:7070
+        - name: CURRENCY_SERVICE_ADDR
+          value: currencyservice.hipstershopv1v2:7000
+        - name: EMAIL_SERVICE_ADDR
+          value: emailservice.hipstershopv1v2:8080
+        - name: PAYMENT_SERVICE_ADDR
+          value: paymentservice.hipstershopv1v2:50051
+        - name: PORT
+          value: "5050"
+        - name: PRODUCT_CATALOG_SERVICE_ADDR
+          value: productcatalogservice.hipstershopv1v2:3550
+        - name: SHIPPING_SERVICE_ADDR
+          value: shippingservice.hipstershopv1v2:50051
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.tcc:9411
+        image: gcr.io/google-samples/microservices-demo/checkoutservice:v0.1.3
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:5050
+        name: checkoutservice
+        ports:
+        - containerPort: 5050
+          name: grpc
+        readinessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:5050
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: currencyservice
+    project: hipstershopv1v2
+    version: v1
+  name: currencyservice
+  namespace: hipstershopv1v2
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: currencyservice
+      name: currencyservice
+      project: hipstershopv1v2
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: currencyservice
+        name: currencyservice
+        project: hipstershopv1v2
+        version: v1
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: "7000"
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.tcc:9411
+        image: gcr.io/google-samples/microservices-demo/currencyservice:v0.1.3
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:7000
+        name: currencyservice
+        ports:
+        - containerPort: 7000
+          name: grpc
+        readinessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:7000
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: emailservice
+    project: hipstershopv1v2
+    version: v1
+  name: emailservice
+  namespace: hipstershopv1v2
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: emailservice
+      name: emailservice
+      project: hipstershopv1v2
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: emailservice
+        name: emailservice
+        project: hipstershopv1v2
+        version: v1
+    spec:
+      containers:
+      - env:
+        - name: ENABLE_PROFILER
+          value: "0"
+        - name: PORT
+          value: "8080"
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.tcc:9411
+        image: gcr.io/google-samples/microservices-demo/emailservice:v0.1.3
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:8080
+        name: emailservice
+        ports:
+        - containerPort: 8080
+          name: grpc
+        readinessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:8080
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: frontend
+    project: hipstershopv1v2
+    version: v1
+  name: frontend
+  namespace: hipstershopv1v2
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: frontend
+      name: frontend
+      project: hipstershopv1v2
+      version: v1
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/rewriteAppHTTPProbers: "true"
+      labels:
+        app: frontend
+        name: frontend
+        project: hipstershopv1v2
+        version: v1
+    spec:
+      containers:
+      - env:
+        - name: AD_SERVICE_ADDR
+          value: adservice.hipstershopv1v2:9555
+        - name: CART_SERVICE_ADDR
+          value: cartservice.hipstershopv1v2:7070
+        - name: CHECKOUT_SERVICE_ADDR
+          value: checkoutservice.hipstershopv1v2:5050
+        - name: CURRENCY_SERVICE_ADDR
+          value: currencyservice.hipstershopv1v2:7000
+        - name: PORT
+          value: "8080"
+        - name: PRODUCT_CATALOG_SERVICE_ADDR
+          value: productcatalogservice.hipstershopv1v2:3550
+        - name: RECOMMENDATION_SERVICE_ADDR
+          value: recommendationservice.hipstershopv1v2:8080
+        - name: SHIPPING_SERVICE_ADDR
+          value: shippingservice.hipstershopv1v2:50051
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.tcc:9411
+        image: gcr.io/google-samples/microservices-demo/frontend:v0.1.3
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            httpHeaders:
+            - name: Cookie
+              value: shop_session-id=x-readiness-probe
+            path: /_healthz
+            port: 8080
+          initialDelaySeconds: 10
+        name: frontend
+        ports:
+        - containerPort: 8080
+          name: http
+        readinessProbe:
+          httpGet:
+            httpHeaders:
+            - name: Cookie
+              value: shop_session-id=x-readiness-probe
+            path: /_healthz
+            port: 8080
+          initialDelaySeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: loadgenerator
+    project: hipstershopv1v2
+    version: v1
+  name: loadgenerator
+  namespace: hipstershopv1v2
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: loadgenerator
+      name: loadgenerator
+      project: hipstershopv1v2
+      version: v1
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/rewriteAppHTTPProbers: "true"
+      labels:
+        app: loadgenerator
+        name: loadgenerator
+        project: hipstershopv1v2
+        version: v1
+    spec:
+      containers:
+      - env:
+        - name: FRONTEND_ADDR
+          value: http://frontend.hipstershopv1v2:8080
+        - name: USERS
+          value: "10"
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.tcc:9411
+        image: gcr.io/google-samples/microservices-demo/productcatalogservice:v0.1.3
+        imagePullPolicy: Always
+        name: loadgenerator
+        ports:
+        - containerPort: 8089
+          name: http
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 300m
+            memory: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: paymentservice
+    project: hipstershopv1v2
+    version: v1
+  name: paymentservice
+  namespace: hipstershopv1v2
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: paymentservice
+      name: paymentservice
+      project: hipstershopv1v2
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: paymentservice
+        name: paymentservice
+        project: hipstershopv1v2
+        version: v1
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: "50051"
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.tcc:9411
+        image: gcr.io/google-samples/microservices-demo/paymentservice:v0.1.3
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:50051
+        name: paymentservice
+        ports:
+        - containerPort: 50051
+          name: grpc
+        readinessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:50051
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: productcatalogservice
+    project: hipstershopv1v2
+    version: v1
+  name: productcatalogservice
+  namespace: hipstershopv1v2
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: productcatalogservice
+      name: productcatalogservice
+      project: hipstershopv1v2
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: productcatalogservice
+        name: productcatalogservice
+        project: hipstershopv1v2
+        version: v1
+    spec:
+      containers:
+      - env:
+        - name: DEMO_DEPLOYMENT_ENV_VAR
+          value: none
+        - name: PORT
+          value: "3550"
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.tcc:9411
+        image: gcr.io/google-samples/microservices-demo/productcatalogservice:v0.1.3
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:3550
+        name: productcatalogservice
+        ports:
+        - containerPort: 3550
+          name: grpc
+        readinessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:3550
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: productcatalogservice
+    project: hipstershopv1v2
+    version: v2
+  name: productcatalogservice-slow
+  namespace: hipstershopv1v2
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: productcatalogservice
+      name: productcatalogservice-slow
+      project: hipstershopv1v2
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: productcatalogservice
+        name: productcatalogservice-slow
+        project: hipstershopv1v2
+        version: v2
+    spec:
+      containers:
+      - env:
+        - name: DEMO_DEPLOYMENT_ENV_VAR
+          value: none
+        - name: PORT
+          value: "3550"
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.tcc:9411
+        - name: EXTRA_LATENCY
+          value: 5.5s
+        image: gcr.io/google-samples/microservices-demo/productcatalogservice:v0.1.3
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:3550
+        name: productcatalogservice-slow
+        ports:
+        - containerPort: 3550
+          name: grpc
+        readinessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:3550
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: recommendationservice
+    project: hipstershopv1v2
+    version: v1
+  name: recommendationservice
+  namespace: hipstershopv1v2
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: recommendationservice
+      name: recommendationservice
+      project: hipstershopv1v2
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: recommendationservice
+        name: recommendationservice
+        project: hipstershopv1v2
+        version: v1
+    spec:
+      containers:
+      - env:
+        - name: ENABLE_PROFILER
+          value: "0"
+        - name: PORT
+          value: "8080"
+        - name: PRODUCT_CATALOG_SERVICE_ADDR
+          value: productcatalogservice.hipstershopv1v2:3550
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.tcc:9411
+        image: gcr.io/google-samples/microservices-demo/recommendationservice:v0.1.3
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:8080
+        name: recommendationservice
+        ports:
+        - containerPort: 8080
+          name: grpc
+        readinessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:8080
+        resources:
+          limits:
+            cpu: 200m
+            memory: 450Mi
+          requests:
+            cpu: 100m
+            memory: 220Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: redis-cart
+    project: hipstershopv1v2
+    version: v1
+  name: redis-cart
+  namespace: hipstershopv1v2
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: redis-cart
+      name: redis-cart
+      project: hipstershopv1v2
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: redis-cart
+        name: redis-cart
+        project: hipstershopv1v2
+        version: v1
+    spec:
+      containers:
+      - env:
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.tcc:9411
+        image: docker.io/library/redis:alpine
+        imagePullPolicy: Always
+        livenessProbe:
+          periodSeconds: 5
+          tcpSocket:
+            port: 6379
+        name: redis-cart
+        ports:
+        - containerPort: 6379
+          name: redis
+        readinessProbe:
+          periodSeconds: 5
+          tcpSocket:
+            port: 6379
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+        volumeMounts:
+        - mountPath: /data
+          name: redis-data
+      volumes:
+      - emptyDir: {}
+        name: redis-data
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: shippingservice
+    project: hipstershopv1v2
+    version: v1
+  name: shippingservice
+  namespace: hipstershopv1v2
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: shippingservice
+      name: shippingservice
+      project: hipstershopv1v2
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: shippingservice
+        name: shippingservice
+        project: hipstershopv1v2
+        version: v1
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: "50051"
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.tcc:9411
+        image: gcr.io/google-samples/microservices-demo/shippingservice:v0.1.3
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:50051
+        name: shippingservice
+        ports:
+        - containerPort: 50051
+          name: grpc
+        readinessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:50051
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: adservice
+    name: adservice
+    project: hipstershopv1v2
+    service: adservice
+  name: adservice
+  namespace: hipstershopv1v2
+spec:
+  ports:
+  - name: grpc-adservice
+    port: 9555
+    targetPort: 9555
+  selector:
+    app: adservice
+    project: hipstershopv1v2
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: cartservice
+    name: cartservice
+    project: hipstershopv1v2
+    service: cartservice
+  name: cartservice
+  namespace: hipstershopv1v2
+spec:
+  ports:
+  - name: grpc-cartservice
+    port: 7070
+    targetPort: 7070
+  selector:
+    app: cartservice
+    project: hipstershopv1v2
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: checkoutservice
+    name: checkoutservice
+    project: hipstershopv1v2
+    service: checkoutservice
+  name: checkoutservice
+  namespace: hipstershopv1v2
+spec:
+  ports:
+  - name: grpc-checkoutservice
+    port: 5050
+    targetPort: 5050
+  selector:
+    app: checkoutservice
+    project: hipstershopv1v2
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: currencyservice
+    name: currencyservice
+    project: hipstershopv1v2
+    service: currencyservice
+  name: currencyservice
+  namespace: hipstershopv1v2
+spec:
+  ports:
+  - name: grpc-currencyservice
+    port: 7000
+    targetPort: 7000
+  selector:
+    app: currencyservice
+    project: hipstershopv1v2
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: emailservice
+    name: emailservice
+    project: hipstershopv1v2
+    service: emailservice
+  name: emailservice
+  namespace: hipstershopv1v2
+spec:
+  ports:
+  - name: grpc-emailservice
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: emailservice
+    project: hipstershopv1v2
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: frontend
+    name: frontend
+    project: hipstershopv1v2
+    service: frontend
+  name: frontend
+  namespace: hipstershopv1v2
+spec:
+  ports:
+  - name: http-frontend
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: frontend
+    project: hipstershopv1v2
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: paymentservice
+    name: paymentservice
+    project: hipstershopv1v2
+    service: paymentservice
+  name: paymentservice
+  namespace: hipstershopv1v2
+spec:
+  ports:
+  - name: grpc-paymentservice
+    port: 50051
+    targetPort: 50051
+  selector:
+    app: paymentservice
+    project: hipstershopv1v2
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: productcatalogservice
+    name: productcatalogservice
+    project: hipstershopv1v2
+    service: productcatalogservice
+  name: productcatalogservice
+  namespace: hipstershopv1v2
+spec:
+  ports:
+  - name: grpc-productcatalogservice
+    port: 3550
+    targetPort: 3550
+  selector:
+    app: productcatalogservice
+    project: hipstershopv1v2
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: recommendationservice
+    name: recommendationservice
+    project: hipstershopv1v2
+    service: recommendationservice
+  name: recommendationservice
+  namespace: hipstershopv1v2
+spec:
+  ports:
+  - name: grpc-recommendationservice
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: recommendationservice
+    project: hipstershopv1v2
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redis-cart
+    name: redis-cart
+    project: hipstershopv1v2
+    service: redis-cart
+  name: redis-cart
+  namespace: hipstershopv1v2
+spec:
+  ports:
+  - name: redis-redis-cart
+    port: 6379
+    targetPort: 6379
+  selector:
+    app: redis-cart
+    project: hipstershopv1v2
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: shippingservice
+    name: shippingservice
+    project: hipstershopv1v2
+    service: shippingservice
+  name: shippingservice
+  namespace: hipstershopv1v2
+spec:
+  ports:
+  - name: grpc-shippingservice
+    port: 50051
+    targetPort: 50051
+  selector:
+    app: shippingservice
+    project: hipstershopv1v2
+  type: ClusterIP
