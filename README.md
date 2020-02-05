@@ -19,7 +19,7 @@ You can build the images using the scripts located in the `hack` folder:
 # build only one image
 TAG=v1.2.3 REPO_PREFIX=my.docker.hub ./hack/make-docker-images-nopush.sh emailservice
 
-# build all images
+# build all images locally (no push)
 TAG=v1.2.3 REPO_PREFIX=my.docker.hub ./hack/make-docker-images-nopush.sh
 
 # build all and push to Docker Registry

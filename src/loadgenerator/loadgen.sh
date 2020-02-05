@@ -46,9 +46,10 @@ fi
 
 
 # if one request to the frontend fails, then exit
-STATUSCODE=$(curl --silent --output /dev/stderr --write-out "%{http_code}" ${SNI_OPTS} ${FRONTEND_ADDR})
+STATUSCODE=$(curl -k --silent --output /dev/stderr --write-out "%{http_code}" ${SNI_OPTS} ${FRONTEND_ADDR})
 if test $STATUSCODE -ne 200; then
     echo "Error: Could not reach frontend - Status code: ${STATUSCODE}"
+    curl -v -k --silent --output /dev/stderr --write-out "%{http_code}" ${SNI_OPTS} ${FRONTEND_ADDR}
     exit 1
 fi
 
