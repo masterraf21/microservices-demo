@@ -13,9 +13,9 @@
       port: 8080,
       portName: "http",
       image: {
-        repo: $._config.repo,
+        repo: $._config.image.repo,
         name: "frontend",
-        tag: "v0.1.3"
+        tag: $._config.image.tag,
       },
       labels: {app: "frontend"},
       // env: [

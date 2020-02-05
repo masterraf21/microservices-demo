@@ -20,9 +20,11 @@ By design, different versions of one micro-service is supposed to be deployed in
 First [install Tanka](https://tanka.dev/install), then go in the tanka folder.
 
 You need at least Tanka v0.7.0 to be able to use the `--extVar` option needed for the `specific` environment.
-It can be installed using (as of 20200121):
+Use the script `install-tanka.sh` to install in `/usr/local/lib` (you will need root privileges to do so, or set `DEST=<other destination`>)
+
+It can be installed from source using (as of 20200121):
 ```
-go get -u github.com/grafana/tanka/cmd/tk@master
+go get -u github.com/grafana/tanka/cmd/tk@0.7.0
 ```
 
 If the target namespace does not exist, create it:
@@ -35,33 +37,38 @@ kubectl label namespace hipstershop1 istio-injection=enabled
 You can then build the yaml by using the `tk` command line :
 
 ```bash
-cd test/tcc/hipstershop/tanka
-tk show environments/full
+tk show tanka/environments/default
 ```
 
 You can also select a subset of the micro-services:
 
 ```bash
-tk show environments/full --target deployment/cartservice --target service/cartservice
+tk show tanka/environments/default --target deployment/cartservice --target service/cartservice
 ```
 
 You can save the yaml into a file, or pipe to kubectl to deploy:
 
 ```bash
-tk show environments/full --dangerous-allow-redirect > ../hipstershop.yaml
+tk show tanka/environments/default --dangerous-allow-redirect > /tmp/hipstershop.yaml
 ```
 
 ### using Docker image
 
 You can use the Tanka docker image to build your code:
 ```
-cd tetrate/test/tcc/hipstershop/tanka
-docker run -ti --rm -v $(pwd):/tanka grafana/tanka:0.6.2 show tanka/environments/default > /tmp/hipstershop1.yaml
+cd tanka
+docker run -ti --rm -v $(pwd):/tanka grafana/tanka:0.7.0 show tanka/environments/default > /tmp/hipstershop1.yaml
 ```
+## Full manual deployment
+
+the environment `manual` use two command line variables to manually configure the generated output. Two arguments can be used:
+ - `-e selectedApps='[]'`: list the micro-services to include. This is like using the `--target` but is more user friendly when you want multiple microservices
+ - `-e manualConfig='{}'`: can be used to redefine all the `_config` variables. This is equivalent as editing the `environment/<name>/main.jsonnet` file
+
 
 ## Specific deployments
 
-You can create a new folder under `environments` and add modify the `main.yaml` file to support different deployments.
+You can create a new folder under `environments` and modify the `main.jsonnet` file to support different deployments.
 
 When creating a new topology, you just have to update the specific part of the `_config`. See `v1-v2` environment files.
 
@@ -71,7 +78,27 @@ When adding multiple versions of the same micro-service, ensure to :
 - change its name
 - set the option `withSvc=false` to NOT create another service for this micro-service
 
-ex :
+#### on the command line
+This example will only output the `adservice` application, with two deployments, the default `v1` plus a specific `v2` with a specific Image and without a service:
+
+```bash
+tk show tanka/environments/manual --dangerous-allow-redirect -e selectedApps='["adservice"]' -e manualConfig='{
+  project: "adservice-alone",
+  namespace: "splitted",
+  adservice+: {
+    deployments+: [
+      {name: "adservice-v2", version: "v2", withSvc: false, replica: 2, localEnv:{}, image:{
+        repo: "myrepo",
+        name: "adservice",
+        tag: "v0.2"
+      }},
+    ],
+  },
+}'
+```
+
+#### by changing the environment
+Edit the `main.jsonnet` file in one of the envs so:
 
 ```json
 _config+:: {
@@ -88,7 +115,7 @@ _config+:: {
   },
 ```
 
-- we add a `v2` version of the app `adservice` because we used `deployments+:`
+- we add a `v2` version of the app `adservice` because we used a `+` when defining the `deployments`
 - we remove all the deployments of `cartservice` as we re-defined it as empty (this will lead to a broken deployment though)
 
 ### Different Namespaces
@@ -104,18 +131,47 @@ Both Namespace and Project are set to `hipstershop1` for the `default` environme
     ...
 ```
 
-#### Global change
-
-You can change the target `namespace` and the `project` of the whole deployment by using the environment `environment/specific`. You *have to* provide the two variables on the commandline:
+You can change it on the commande line when using the `manual` environment:
 
 ```bash
-tk show environments/specific -e 'project="myproject"' -e 'namespace="mynamespace"'
+tk show tanka/environments/manual --dangerous-allow-redirect -e selectedApps='[]' -e manualConfig='{
+  project: "myproject",
+  namespace: "mynamespace",
+}'
 ```
 
-This is usefull when deplying using the `deploy/tcc/06-install-app.sh` script.
+Note that Tanka *DOES NOT* create the Namespace for you
 
-#### Specific change
+#### Per-Application Specific change
 
+You can change the namespace of each individual micro-service by re-defining it in the environment
+
+#### on the command line
+
+```bash
+tk show tanka/environments/manual --dangerous-allow-redirect -e selectedApps='["adservice","cartservice"]' -e manualConfig='{
+  adservice+: {
+    namespace: "anotherNS",
+  },
+}'
+```
+
+You can also change some core parameters here if you want to test beyond the default deployment. 
+You can add any new config parameter, overwriting the default one, or add a `+` to add.
+Ex to add more env variables : 
+
+```bash
+tk show tanka/environments/manual --dangerous-allow-redirect -e selectedApps='[]' -e manualConfig='{
+    project: "hipstershop1",
+    namespace: "myNamespace",
+    productcatalogservice+: {
+      namespace: "hipstershopsvc1",
+      env+: {EXTRA_LATENCY: "5.5s"},
+    }, 
+  }'
+```
+
+#### by changing the environment
 You can change the namespace of each individual micro-service by re-defining it in the `main.jsonnet` of each env: 
 
 ```jsonnet
@@ -137,65 +193,38 @@ Ex to add more env variables :
     namespace: $._config.project,
     productcatalogservice+: {
       namespace: "hipstershopsvc1",
-      env+: [
-        {name: "EXTRA_LATENCY", value: "5.5s"},
-      ]
+      env+: {EXTRA_LATENCY: "5.5s"},
     }, 
   },
 ```
 
 ### Full Distributed Deployment
 
-You can use the _environment_ `multi-tier` to generate more specific deployments. To do so you can define 4 external variables:
-1. `-e project='"myNewProjectName"'` will change the project name. This is used to label all the micro-services beeing part of the same project.
-1. `-e namespace='"myNewNamespace"'` will globally change the namespace of ALL micro-services.
-1. `-e externalURLs='{}'` will allow you to specify the URL for each micro-service individually. This will work in conjuction to the next option.
-1. `-e externalApps='[]'` is a list of all the micro-services you want to build.
+You can use the _environment_ `manual` to generate more specific deployments.
+The idea here is to be able to deploy the frontend in one cluster, the services in another and Redis in a last one.
+To achieve this you will need to run the Tanka build 3 times as each build will generate a single yaml file.
 
-The idea here is to be able to deploy, for example, the frontend in one cluster, the services in another and Redis in a last one.
-To achieve this you will need to run the Tanka build 3 times.
-
-#### Examples
-
-##### Everything in the same cluster
-
-This is equivalent to the `default` environment :
+#### Fontend only
 
 ```bash
-tk show environments/multi-tier --dangerous-allow-redirect \
-  -e externalURLs='{}' \
-  -e externalApps='[]' \
-  -e project='""' \
-  -e namespace='""'
-```
-
-note the '""' the content inside the '' have to be a valid json object: "" is the empty string
-
-##### Fontend only
-
-```bash
-tk show environments/multi-tier --dangerous-allow-redirect \
-  -e project='""' \
-  -e namespace='""' \
-  -e externalURLs='{
-     productcatalogservice: "productcatalogservice.svc.external.com:443",
-     currencyservice: "currencyservice.svc.external.com:443",
-     cartservice: "cartservice.svc.external.com:443",
-     recommendationservice: "recommendationservice.svc.external.com:443",
-     shippingservice: "shippingservice.svc.external.com:443",
-     checkoutservice: "checkoutservice.svc.external.com:443",
-     adservice: "adservice.svc.external.com:443",}' \
-  -e externalApps='["frontend"]'
+tk show tanka/environments/manual --dangerous-allow-redirect -e selectedApps='["frontend"]' -e manualConfig='{
+  productcatalogservice+: {URL: "productcatalogservice.svc.external.com:443"},
+  currencyservice+: {URL: "currencyservice.svc.external.com:443"},
+  cartservice+: {URL: "cartservice.svc.external.com:443"},
+  recommendationservice+: {URL: "recommendationservice.svc.external.com:443"},
+  shippingservice+: {URL: "shippingservice.svc.external.com:443"},
+  checkoutservice+: {URL: "checkoutservice.svc.external.com:443"},
+  adservice+: {URL: "adservice.svc.external.com:443" },
+  }' > /tmp/hipstershop-frontend.yaml
 ```
 
 ##### All services
 
 ```bash
-tk show environments/multi-tier --dangerous-allow-redirect \
-  -e project='""' \
-  -e namespace='""' \
-  -e externalURLs='{rediscart: "rediscart.svc.external.com:443"}' \
-  -e externalApps='[
+tk show tanka/environments/manual --dangerous-allow-redirect -e manualConfig='{
+  rediscart+: {URL: "rediscart.db-tier.external.com:443"},
+  }' \
+  -e selectedApps='[
     "adservice",
     "checkoutservice",
     "emailservice",
@@ -205,25 +234,52 @@ tk show environments/multi-tier --dangerous-allow-redirect \
     "cartservice",
     "currencyservice",
     "productcatalogservice"
-    ]'
+    ]' > /tmp/hipstershop-services.yaml
 ```
 
 ##### Redis
 
 ```bash
-tk show environments/multi-tier --dangerous-allow-redirect \
-  -e project='""' \
-  -e namespace='""' \
-  -e externalURLs='{}' \
-  -e externalApps='["rediscart"]'
+tk show tanka/environments/manual --dangerous-allow-redirect -e manualConfig='{}' \
+  -e selectedApps='["rediscart"]' > /tmp/hipstershop-redis.yaml
 ```
 
 ##### Load Generator
 
 ```bash
-tk show environments/multi-tier --dangerous-allow-redirect \
-  -e project='""' \
-  -e namespace='""' \
-  -e externalURLs='{frontend: "www.hipstershop.external.com:443"}' \
-  -e externalApps='["loadgenerator"]'
+tk show tanka/environments/manual --dangerous-allow-redirect -e manualConfig='{
+  frontend+: {URL: "www.hipstershop.external.com:443"},
+}' \
+  -e selectedApps='["loadgenerator"]' > /tmp/hipstershop-loadgenerator.yaml
+```
+
+### Using your own images
+
+If you built the docker images yourself or want to use a specific release, you can change the repo globally.
+
+```bash
+tk show tanka/environments/manual --dangerous-allow-redirect -e selectedApps='[]' -e manualConfig='{
+    image+: {
+      repo: "myrepo",
+      tag: "v0.1.4"
+    },
+  }'
+```
+
+The `Redis` image is coming from DockerHub and is set to `redis:alpine`. If you want to change it you have to specify it explicitelly. Set the Repo value to `docker.io/library` to use images on DockerHub:
+
+```bash
+tk show tanka/environments/manual --dangerous-allow-redirect -e selectedApps='["rediscart"]' -e manualConfig='{
+    image+: {
+      repo: "myrepo",
+      tag: "v0.1.4"
+    },
+    rediscart+: {
+      image+: {
+        repo: "myrepo",
+        name: "redis",
+        tag: "latest",
+      }
+    }
+  }'
 ```

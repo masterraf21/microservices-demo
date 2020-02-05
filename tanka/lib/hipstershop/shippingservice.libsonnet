@@ -13,9 +13,9 @@
       port: 50051,
       portName: "grpc",
       image: {
-        repo: $._config.repo,
+        repo: $._config.image.repo,
         name: "shippingservice",
-        tag: "v0.1.3"
+        tag: $._config.image.tag,
       },
       labels: {app: "shippingservice"},
       env: {

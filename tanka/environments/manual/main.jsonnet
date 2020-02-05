@@ -78,7 +78,7 @@
 
   // generate the code for all applications.
   output: {
-    [dep.name]: $.hipstershopApp.new(type=app, name=dep.name, version=dep.version, withSvc=dep.withSvc, localEnv=dep.localEnv, replica=dep.replica) for app in apps for dep in $["_config"][app].deployments
+    [dep.name]: $.hipstershopApp.new(type=app, name=dep.name, version=dep.version, withSvc=dep.withSvc, localEnv=dep.localEnv, replica=dep.replica, image=dep.image) for app in apps for dep in $["_config"][app].deployments
    },
 }
 

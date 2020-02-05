@@ -21,8 +21,10 @@
 
   // set Deployments defaults
   _config+:: {
-    repo: "gcr.io/google-samples/microservices-demo",
-
+    image: {
+      repo: "gcr.io/google-samples/microservices-demo",
+      tag: "v0.1.3",
+    },
     // define defaults values to add to each micro-service
     default+: {
       URL:  "%s.%s:%s" % [self.app, self.namespace, self.port],
@@ -33,73 +35,73 @@
 
     adservice+: {
       deployments: [
-        {name: "adservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
+        {name: "adservice", version: "v1", withSvc: true, localEnv:{}, replica: 1, image: {}},
       ],
       } + $._config.default,
 
     cartservice+: {
       deployments: [
-        {name: "cartservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
+        {name: "cartservice", version: "v1", withSvc: true, localEnv:{}, replica: 1, image: {}},
       ],
     } + $._config.default,
 
     checkoutservice+: {
       deployments: [
-        {name: "checkoutservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
+        {name: "checkoutservice", version: "v1", withSvc: true, localEnv:{}, replica: 1, image: {}},
       ],
     } + $._config.default, 
 
     currencyservice+: {
       deployments: [
-        {name: "currencyservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
+        {name: "currencyservice", version: "v1", withSvc: true, localEnv:{}, replica: 1, image: {}},
       ],
     } + $._config.default, 
 
     emailservice+: {
       deployments: [
-        {name: "emailservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
+        {name: "emailservice", version: "v1", withSvc: true, localEnv:{}, replica: 1, image: {}},
       ],
     } + $._config.default,
 
     frontend+: {
       deployments: [
-        {name: "frontend", version: "v1", withSvc: true, localEnv:{}, replica: 1},
+        {name: "frontend", version: "v1", withSvc: true, localEnv:{}, replica: 1, image: {}},
       ],
     } + $._config.default,
 
     paymentservice+: {
       deployments: [
-        {name: "paymentservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
+        {name: "paymentservice", version: "v1", withSvc: true, localEnv:{}, replica: 1, image: {}},
       ],
     } + $._config.default,
 
     productcatalogservice+: {
       deployments: [
-        {name: "productcatalogservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
+        {name: "productcatalogservice", version: "v1", withSvc: true, localEnv:{}, replica: 1, image: {}},
       ],
     } + $._config.default,
 
     recommendationservice+: {
       deployments: [
-        {name: "recommendationservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
+        {name: "recommendationservice", version: "v1", withSvc: true, localEnv:{}, replica: 1, image: {}},
       ],
     } + $._config.default,
 
     shippingservice+: {
       deployments: [
-        {name: "shippingservice", version: "v1", withSvc: true, localEnv:{}, replica: 1},
+        {name: "shippingservice", version: "v1", withSvc: true, localEnv:{}, replica: 1, image: {}},
       ],
     } + $._config.default,
 
     rediscart+: {
       deployments: [
-        {name: "redis-cart", version: "v1", withSvc: true, localEnv:{}, replica: 1},
+        {name: "redis-cart", version: "v1", withSvc: true, localEnv:{}, replica: 1, image: {},},
       ],
     } + $._config.default,
 
     loadgenerator+: {
       deployments: [
-        {name: "loadgenerator", version: "v1", withSvc: false, localEnv:{}, replica: 1},
+        {name: "loadgenerator", version: "v1", withSvc: false, localEnv:{}, replica: 1, image: {}},
       ],
     } + $._config.default,
   },
@@ -110,12 +112,13 @@
   local service = $.core.v1.service,
 
   hipstershopApp:: {
-    new(type="", name="", version="v1", replica=1, withSvc=false, localEnv={},):: {
+    new(type="", name="", version="v1", replica=1, withSvc=false, localEnv={}, image={},):: {
       local config = $._config[type],
-      
+      local podImage=if std.length(image)==3 then '%s/%s:%s' % [image.repo,image.name,image.tag] else '%s/%s:%s' % [config.image.repo,config.image.name,config.image.tag],
       local labels = config.labels+{version: version, project: $._config.project},
+
       deployment: deploy.new(name=name, replicas=1, podLabels=labels, containers=[
-        container.new(name, '%s/%s:%s' % [config.image.repo,config.image.name,config.image.tag])
+        container.new(name, podImage)
         + container.withPorts(
             [port.new(config.portName, config.port)]
           )

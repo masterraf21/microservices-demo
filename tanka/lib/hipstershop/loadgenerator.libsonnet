@@ -13,9 +13,9 @@
       port: 8089,
       portName: "http",
       image: {
-        repo: $._config.repo,
-        name: "productcatalogservice",
-        tag: "v0.1.3"
+        repo: $._config.image.repo,
+        name: "loadgenerator",
+        tag: $._config.image.tag,
       },
       labels: {app: "loadgenerator"},
       env: {

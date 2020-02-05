@@ -13,9 +13,9 @@
       port: 8080,
       portName: "grpc",
       image: {
-        repo: $._config.repo,
+        repo: $._config.image.repo,
         name: "emailservice",
-        tag: "v0.1.3"
+        tag: $._config.image.tag,
       },
       labels: {app: "emailservice"},
       env: {
