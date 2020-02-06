@@ -19,6 +19,7 @@
       },
       labels: {app: "loadgenerator"},
       env: {
+        PYTHONWARNINGS: "ignore",
         FRONTEND_ADDR: "http://%s" % $._config.frontend.URL,
         USERS: "10",
         // FRONTEND_ADDR: "https://hipstershop1.tetrate.io:443",
@@ -28,7 +29,7 @@
       livenessProbe: {},
       limits: container.mixin.resources.withLimits({cpu: "500m", memory: "512Mi"}),
       requests: container.mixin.resources.withRequests({cpu: "300m", memory: "256Mi"}),
-      deploymentExtra: deploy.mixin.spec.template.metadata.withAnnotations({"sidecar.istio.io/rewriteAppHTTPProbers": "true"}),
+      deploymentExtra: deploy.mixin.spec.template.metadata.withAnnotations({"sidecar.istio.io/inject": "false"}),
       serviceExtra: {},
     },
   },
