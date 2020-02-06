@@ -19,8 +19,10 @@
       },
       labels: {app: "adservice"},
       env: {PORT: "%s" % $._config.adservice.port},
-      readinessProbe: container.mixin.readinessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port ]),
-      livenessProbe: container.mixin.livenessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port ]),
+      readinessProbe: container.mixin.readinessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port ])
+                    + container.mixin.readinessProbe.withInitialDelaySeconds(15),
+      livenessProbe: container.mixin.livenessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port ])
+                    + container.mixin.livenessProbe.withInitialDelaySeconds(15),
       limits: container.mixin.resources.withLimits({cpu: "300m", memory: "300Mi"}),
       requests: container.mixin.resources.withRequests({cpu: "200m", memory: "180Mi"}),
       deploymentExtra: {},
