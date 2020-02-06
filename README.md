@@ -1,6 +1,6 @@
 # Hipster Shop: Cloud-Native Microservices Demo Application
 
-This repo is a fork of http://go/microservices-demo with modifications to suite the Tetrate Service Bus.
+This repo is a fork of http://go/microservices-demo with modifications to suite the Tetrate Service Bridge.
 
 Changes includes :
 - using `Zipkin` traces instead of `Jaeger`/`Stackdriver`
