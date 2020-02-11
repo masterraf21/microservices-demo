@@ -26,10 +26,6 @@ import io.opencensus.common.Duration;
 import io.opencensus.common.Scope;
 import io.opencensus.contrib.grpc.metrics.RpcViews;
 import io.opencensus.contrib.grpc.util.StatusConverter;
-import io.opencensus.exporter.stats.stackdriver.StackdriverStatsConfiguration;
-import io.opencensus.exporter.stats.stackdriver.StackdriverStatsExporter;
-import io.opencensus.exporter.trace.stackdriver.StackdriverTraceConfiguration;
-import io.opencensus.exporter.trace.stackdriver.StackdriverTraceExporter;
 import io.opencensus.trace.Span;
 import io.opencensus.trace.Tracer;
 import io.opencensus.trace.Tracing;
@@ -135,31 +131,6 @@ public class AdServiceClient {
     // Registers Stackdriver exporters.
     long sleepTime = 10; /* seconds */
     int maxAttempts = 3;
-
-    for (int i = 0; i < maxAttempts; i++) {
-      try {
-        StackdriverTraceExporter.createAndRegister(StackdriverTraceConfiguration.builder().build());
-        StackdriverStatsExporter.createAndRegister(
-            StackdriverStatsConfiguration.builder()
-                .setExportInterval(Duration.create(15, 0))
-                .build());
-      } catch (Exception e) {
-        if (i == (maxAttempts - 1)) {
-          logger.log(
-              Level.WARN,
-              "Failed to register Stackdriver Exporter."
-                  + " Tracing and Stats data will not reported to Stackdriver. Error message: "
-                  + e.toString());
-        } else {
-          logger.info("Attempt to register Stackdriver Exporter in " + sleepTime + " seconds");
-          try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(sleepTime));
-          } catch (Exception se) {
-            logger.log(Level.WARN, "Exception while sleeping" + e.toString());
-          }
-        }
-      }
-    }
 
     // Register Prometheus exporters and export metrics to a Prometheus HTTPServer.
     // PrometheusStatsCollector.createAndRegister();
