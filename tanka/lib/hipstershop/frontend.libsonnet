@@ -38,6 +38,7 @@
         SHIPPING_SERVICE_ADDR: $._config.shippingservice.URL,
         CHECKOUT_SERVICE_ADDR: $._config.checkoutservice.URL,
         AD_SERVICE_ADDR: $._config.adservice.URL,
+        // BANNER_COLOR: "red",
         // JAEGER_SERVICE_ADDR: "jaeger-collector:14268",
       },
       readinessProbe: container.mixin.readinessProbe.httpGet.withPath("/_healthz")

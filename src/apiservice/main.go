@@ -122,6 +122,8 @@ func main() {
 	mustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
 
 	r := mux.NewRouter()
+	r.HandleFunc("/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc("/api/v1", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc("/api/v1/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc("/api/v1/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc("/api/v1/cart", svc.addToCartHandler).Methods(http.MethodPost)
@@ -129,8 +131,8 @@ func main() {
 	r.HandleFunc("/api/v1/setCurrency", svc.setCurrencyHandler).Methods(http.MethodPost)
 	r.HandleFunc("/api/v1/logout", svc.logoutHandler).Methods(http.MethodGet)
 	r.HandleFunc("/api/v1/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost)
-	r.HandleFunc("/api/v1/robots.txt", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "User-agent: *\nDisallow: /") })
-	r.HandleFunc("/api/v1/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "ok") })
+	r.HandleFunc("/robots.txt", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "User-agent: *\nDisallow: /") })
+	r.HandleFunc("/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "ok") })
 
 	// also init the prometheus handler
 	initPrometheusStats(log, r)

@@ -1,5 +1,9 @@
-# frontend
+# apiservice
 
-Run the following command to restore dependencies to `vendor/` directory:
+This is a stripped down version of the `frontend` application that just return json.
+ex:
 
-    dep ensure --vendor-only
+```
+curl -s "http://apiservice:8080/api/v1/"|jq '.'
+curl -s "http://apiservice:8080/api/v1/product/OLJCESPC7Z"|jq '.'
+```
