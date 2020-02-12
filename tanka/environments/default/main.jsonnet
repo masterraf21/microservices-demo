@@ -8,6 +8,7 @@
 
   local apps=[
     "adservice",
+    "apiservice",
     "cartservice",
     "checkoutservice",
     "currencyservice",

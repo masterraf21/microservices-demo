@@ -63,6 +63,7 @@
   local apps=if std.length($.selectedApps) > 0 then $.selectedApps else
     [
     "adservice",
+    "apiservice",
     "cartservice",
     "checkoutservice",
     "currencyservice",
