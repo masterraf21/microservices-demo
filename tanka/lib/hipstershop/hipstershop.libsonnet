@@ -1,4 +1,5 @@
 (import "hipstershop/adservice.libsonnet") +
+(import "hipstershop/apiservice.libsonnet") +
 (import "hipstershop/cartservice.libsonnet") +
 (import "hipstershop/checkoutservice.libsonnet") +
 (import "hipstershop/currencyservice.libsonnet") +
@@ -38,6 +39,12 @@
         {name: "adservice", version: "v1", withSvc: true, localEnv:{}, replica: 1, image: {}},
       ],
       } + $._config.default,
+
+    apiservice+: {
+      deployments: [
+        {name: "apiservice", version: "v1", withSvc: true, localEnv:{}, replica: 1, image: {}},
+      ],
+    } + $._config.default,
 
     cartservice+: {
       deployments: [

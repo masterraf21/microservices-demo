@@ -5,6 +5,7 @@ This repo is a fork of http://go/microservices-demo with modifications to suite 
 Changes includes :
 - using `Zipkin` traces instead of `Jaeger`/`Stackdriver`
 - adding HTTP and GRPC metrics where needed
+- added `apiservice` which is a clone of the `frontend` but only return json output
 
 ## Changelog
 

@@ -29,6 +29,7 @@
   // all the apps to create
   local apps=[
     "adservice",
+    "apiservice",
     "cartservice",
     "checkoutservice",
     "currencyservice",

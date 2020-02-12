@@ -1,3 +1,5 @@
+#!/bin/bash -eu
+#
 # Copyright 2018 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,16 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: frontend
-spec:
-  hosts:
-  - "frontend.default.svc.cluster.local"
-  http:
-  - route:
-    - destination:
-        host: frontend
-        port:
-          number: 80
+#!/bin/bash -e
+
+PATH=$PATH:$GOPATH/bin
+protodir=../../pb
+
+protoc --go_out=plugins=grpc:genproto -I $protodir $protodir/demo.proto
