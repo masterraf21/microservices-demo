@@ -20,6 +20,7 @@
       labels: {app: "apiservice"},
       env: {
         PORT: "%s" % $._config.apiservice.port,
+        API_VERSION: "v1",
         PRODUCT_CATALOG_SERVICE_ADDR: $._config.productcatalogservice.URL,
         CURRENCY_SERVICE_ADDR: $._config.currencyservice.URL,
         CART_SERVICE_ADDR: $._config.cartservice.URL,

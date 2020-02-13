@@ -39,9 +39,10 @@ import (
 )
 
 const (
-	port            = "8080"
-	defaultCurrency = "USD"
-	cookieMaxAge    = 60 * 60 * 48
+	port              = "8080"
+	defaultAPIVersion = "v1"
+	defaultCurrency   = "USD"
+	cookieMaxAge      = 60 * 60 * 48
 
 	cookiePrefix    = "shop_"
 	cookieSessionID = cookiePrefix + "session-id"
@@ -56,6 +57,7 @@ var (
 		"JPY": true,
 		"GBP": true,
 		"TRY": true}
+	apiPath = ""
 )
 
 type ctxKeySessionID struct{}
@@ -97,6 +99,13 @@ func main() {
 	}
 	log.Out = os.Stdout
 
+	// get the API version to use in the URL
+	apiVersion := defaultAPIVersion
+	if os.Getenv("API_VERSION") != "" {
+		apiVersion = os.Getenv("API_VERSION")
+	}
+	apiPath = fmt.Sprintf("/api/%s", apiVersion)
+
 	go initTracing(log)
 
 	srvPort := port
@@ -123,14 +132,14 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)
-	r.HandleFunc("/api/v1", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)
-	r.HandleFunc("/api/v1/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)
-	r.HandleFunc("/api/v1/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead)
-	r.HandleFunc("/api/v1/cart", svc.addToCartHandler).Methods(http.MethodPost)
-	r.HandleFunc("/api/v1/cart/empty", svc.emptyCartHandler).Methods(http.MethodPost)
-	r.HandleFunc("/api/v1/setCurrency", svc.setCurrencyHandler).Methods(http.MethodPost)
-	r.HandleFunc("/api/v1/logout", svc.logoutHandler).Methods(http.MethodGet)
-	r.HandleFunc("/api/v1/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost)
+	r.HandleFunc(apiPath, svc.homeHandler).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc(apiPath+"/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc(apiPath+"/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc(apiPath+"/cart", svc.addToCartHandler).Methods(http.MethodPost)
+	r.HandleFunc(apiPath+"/cart/empty", svc.emptyCartHandler).Methods(http.MethodPost)
+	r.HandleFunc(apiPath+"/setCurrency", svc.setCurrencyHandler).Methods(http.MethodPost)
+	r.HandleFunc(apiPath+"/logout", svc.logoutHandler).Methods(http.MethodGet)
+	r.HandleFunc(apiPath+"/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost)
 	r.HandleFunc("/robots.txt", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "User-agent: *\nDisallow: /") })
 	r.HandleFunc("/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "ok") })
 

@@ -137,7 +137,7 @@ func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Reques
 		renderHTTPError(log, r, w, errors.Wrap(err, "failed to add to cart"), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("location", "/api/v1/cart")
+	w.Header().Set("location", apiPath+"/cart")
 	w.WriteHeader(http.StatusFound)
 }
 
@@ -149,7 +149,7 @@ func (fe *frontendServer) emptyCartHandler(w http.ResponseWriter, r *http.Reques
 		renderHTTPError(log, r, w, errors.Wrap(err, "failed to empty cart"), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("location", "/api/v1")
+	w.Header().Set("location", apiPath)
 	w.WriteHeader(http.StatusFound)
 }
 
@@ -299,7 +299,7 @@ func (fe *frontendServer) logoutHandler(w http.ResponseWriter, r *http.Request) 
 		c.MaxAge = -1
 		http.SetCookie(w, c)
 	}
-	w.Header().Set("Location", "/api/v1")
+	w.Header().Set("Location", apiPath)
 	w.WriteHeader(http.StatusFound)
 }
 
@@ -318,7 +318,7 @@ func (fe *frontendServer) setCurrencyHandler(w http.ResponseWriter, r *http.Requ
 	}
 	referer := r.Header.Get("referer")
 	if referer == "" {
-		referer = "/api/v1"
+		referer = apiPath
 	}
 	w.Header().Set("Location", referer)
 	w.WriteHeader(http.StatusFound)
