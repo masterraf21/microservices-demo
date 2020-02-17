@@ -12,15 +12,20 @@ Changes includes :
 
 ## Changelog
 
+- 20200217
+   - added github action to build and publish Docker Images
 - 20200129
   - All Go microservices are updated to use Zipkin and provide a `/metrics` endpoint for metrology
   - Loadgenerator can connect to an HTTPS endpoint
 
 ## building images
+Images are built automatically using a Github Action.
+They are published in Docker Hub in the `microservicesdemomesh` registry.
+
 You can build the images using the scripts located in the `hack` folder:
 
 ```
-# build only one image
+# build only the image of emailservice
 TAG=v1.2.3 REPO_PREFIX=my.docker.hub ./hack/make-docker-images-nopush.sh emailservice
 
 # build all images locally (no push)

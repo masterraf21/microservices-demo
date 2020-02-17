@@ -23,14 +23,14 @@
   // set Deployments defaults
   _config+:: {
     image: {
-      repo: "gcr.io/google-samples/microservices-demo",
-      tag: "v0.1.3",
+      repo: "microservicesdemomesh",
+      tag: "v0.1.4",
     },
     // define defaults values to add to each micro-service
     default+: {
       URL:  "%s.%s:%s" % [self.app, self.namespace, self.port],
       env+: {
-        ZIPKIN_SERVICE_ADDR: "zipkin.tcc:9411",
+        ZIPKIN_SERVICE_ADDR: "zipkin.kube-system:9411",
       },
     },
 
