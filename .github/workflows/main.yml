@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    tags:
+      - v*
+    pull_request:
+      branches:
+        - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [adservice, apiservice, cartservice, checkoutservice, currencyservice, emailservice, frontend, loadgenerator, paymentservice, productcatalogservice, recommendationservice, shippingservice]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Get the GIT TAG and Build the Docker image
+      run: |
+        set -x
+        ref_tmp=${GITHUB_REF#*/}
+        ref_type=${ref_tmp%%/*}
+        ref_value=${ref_tmp#*/}
+        TAG=${ref_value//\//-} 
+        if [ "$TAG" == "" ]; then
+          TAG=${GITHUB_SHA}
+        fi
+        export TAG
+        ./hack/make-docker-images-nopush.sh ${{ matrix.app }}
+      env:
+        REPO_PREFIX: "microservicesdemomesh"
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: test
+    strategy:
+      matrix:
+        app: [adservice, apiservice, cartservice, checkoutservice, currencyservice, emailservice, frontend, loadgenerator, paymentservice, productcatalogservice, recommendationservice, shippingservice]
+    steps:
+    - name: Login on DockerHub
+      run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+      env:
+        DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
+        DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+    - uses: actions/checkout@v2
+    - name: Get the GIT TAG and Build the Docker image
+      run: |
+        set -x
+        ref_tmp=${GITHUB_REF#*/}
+        ref_type=${ref_tmp%%/*}
+        ref_value=${ref_tmp#*/}
+        TAG=${ref_value//\//-} 
+        if [ "$TAG" == "" ]; then
+          TAG=${GITHUB_SHA}
+        fi
+        export TAG
+        ./hack/make-docker-images.sh ${{ matrix.app }}
+      env:
+        REPO_PREFIX: "microservicesdemomesh"
