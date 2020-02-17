@@ -7,6 +7,9 @@ Changes includes :
 - adding HTTP and GRPC metrics where needed
 - added `apiservice` which is a clone of the `frontend` but only return json output
 
+## Build status
+![CI](https://github.com/tetratelabs/microservices-demo/workflows/CI/badge.svg)
+
 ## Changelog
 
 - 20200129
