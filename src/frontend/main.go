@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/namsral/flag"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
@@ -39,7 +40,6 @@ import (
 )
 
 const (
-	port            = "8080"
 	defaultCurrency = "USD"
 	cookieMaxAge    = 60 * 60 * 48
 
@@ -49,6 +49,20 @@ const (
 )
 
 var (
+	version               = "no version set"
+	displayVersion        = flag.Bool("version", false, "Show version and quit")
+	logLevel              = flag.String("logLevel", "warn", "log level from debug, info, warning, error. When debug, genetate 100% Tracing")
+	srvURL                = flag.String("srvURL", ":8080", "IP and port to bind, localhost:8080 or :8080")
+	productCatalogSvcAddr = flag.String("PRODUCT_CATALOG_SERVICE_ADDR", "productcatalogservice:3550", "URL to productCatalog service")
+	currencySvcAddr       = flag.String("CURRENCY_SERVICE_ADDR", "currencyservice:7000", "URL to Currency service")
+	cartSvcAddr           = flag.String("CART_SERVICE_ADDR", "cartservice:7070", "URL to Cart service")
+	recommendationSvcAddr = flag.String("RECOMMENDATION_SERVICE_ADDR", "recommendationservice:8080", "URL to Recommendation service")
+	checkoutSvcAddr       = flag.String("CHECKOUT_SERVICE_ADDR", "checkoutservice:5050", "URL to Checkout service")
+	shippingSvcAddr       = flag.String("SHIPPING_SERVICE_ADDR", "shippingservice:50051", "URL to Shipping service")
+	adSvcAddr             = flag.String("AD_SERVICE_ADDR", "adservice:9555", "URL to Ad service")
+	jaegerSvcAddr         = flag.String("JAEGER_SERVICE_ADDR", "", "URL to Jaeger Tracing agent")
+	zipkinSvcAddr         = flag.String("ZIPKIN_SERVICE_ADDR", "", "URL to Zipkin Tracing agent (ex: zipkin:9411)")
+
 	whitelistedCurrencies = map[string]bool{
 		"USD": true,
 		"EUR": true,
@@ -84,9 +98,16 @@ type frontendServer struct {
 }
 
 func main() {
+	// parse flags
+	flag.Parse()
+	if *displayVersion {
+		fmt.Println(version)
+		os.Exit(0)
+	}
+
+	// setup logs
 	ctx := context.Background()
 	log := logrus.New()
-	log.Level = logrus.DebugLevel
 	log.Formatter = &logrus.JSONFormatter{
 		FieldMap: logrus.FieldMap{
 			logrus.FieldKeyTime:  "timestamp",
@@ -96,22 +117,24 @@ func main() {
 		TimestampFormat: time.RFC3339Nano,
 	}
 	log.Out = os.Stdout
+	currLogLevel, err := logrus.ParseLevel(*logLevel)
+	if err != nil {
+		log.Fatalf("error parsing Log Level %s", err)
+	}
+	log.Level = currLogLevel
 
+	// init Opencensus tracing
 	go initTracing(log)
 
-	srvPort := port
-	if os.Getenv("PORT") != "" {
-		srvPort = os.Getenv("PORT")
+	svc := &frontendServer{
+		adSvcAddr:             *adSvcAddr,
+		cartSvcAddr:           *cartSvcAddr,
+		checkoutSvcAddr:       *checkoutSvcAddr,
+		currencySvcAddr:       *currencySvcAddr,
+		productCatalogSvcAddr: *productCatalogSvcAddr,
+		recommendationSvcAddr: *recommendationSvcAddr,
+		shippingSvcAddr:       *shippingSvcAddr,
 	}
-	addr := os.Getenv("LISTEN_ADDR")
-	svc := new(frontendServer)
-	mustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
-	mustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
-	mustMapEnv(&svc.cartSvcAddr, "CART_SERVICE_ADDR")
-	mustMapEnv(&svc.recommendationSvcAddr, "RECOMMENDATION_SERVICE_ADDR")
-	mustMapEnv(&svc.checkoutSvcAddr, "CHECKOUT_SERVICE_ADDR")
-	mustMapEnv(&svc.shippingSvcAddr, "SHIPPING_SERVICE_ADDR")
-	mustMapEnv(&svc.adSvcAddr, "AD_SERVICE_ADDR")
 
 	mustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
 	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
@@ -144,14 +167,26 @@ func main() {
 		Handler:     handler,
 		Propagation: &b3.HTTPFormat{}}
 
-	log.Infof("starting server on " + addr + ":" + srvPort)
-	log.Fatal(http.ListenAndServe(addr+":"+srvPort, handler))
+	log.Infof("starting server on " + *srvURL)
+	log.Fatal(http.ListenAndServe(*srvURL, handler))
 }
 
-func initJaegerTracing(log logrus.FieldLogger) {
+func initTracing(log *logrus.Logger) {
+	// This is a demo app with low QPS. trace.AlwaysSample() is used here
+	// to make sure traces are available for observation and analysis.
+	// In a production environment or high QPS setup please use
+	// trace.ProbabilitySampler set at the desired probability.
+	if log.Level == logrus.DebugLevel {
+		trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+	}
 
-	svcAddr := os.Getenv("JAEGER_SERVICE_ADDR")
-	if svcAddr == "" {
+	initJaegerTracing(log)
+	initZipkinTracing(log)
+}
+
+func initJaegerTracing(log *logrus.Logger) {
+
+	if *jaegerSvcAddr == "" {
 		log.Info("jaeger initialization disabled.")
 		return
 	}
@@ -159,7 +194,7 @@ func initJaegerTracing(log logrus.FieldLogger) {
 	// Register the Jaeger exporter to be able to retrieve
 	// the collected spans.
 	exporter, err := jaeger.NewExporter(jaeger.Options{
-		Endpoint: fmt.Sprintf("http://%s", svcAddr),
+		Endpoint: fmt.Sprintf("http://%s", *jaegerSvcAddr),
 		Process: jaeger.Process{
 			ServiceName: "frontend",
 		},
@@ -171,16 +206,15 @@ func initJaegerTracing(log logrus.FieldLogger) {
 	log.Info("jaeger initialization completed.")
 }
 
-func initZipkinTracing(log logrus.FieldLogger) {
+func initZipkinTracing(log *logrus.Logger) {
 	// start zipkin exporter
 	// URL to zipkin is like http://zipkin.tcc:9411/api/v2/spans
-	svcAddr := os.Getenv("ZIPKIN_SERVICE_ADDR")
-	if svcAddr == "" {
+	if *zipkinSvcAddr == "" {
 		log.Info("zipkin initialization disabled.")
 		return
 	}
 
-	reporter := zipkinhttp.NewReporter(fmt.Sprintf("http://%s/api/v2/spans", svcAddr))
+	reporter := zipkinhttp.NewReporter(fmt.Sprintf("http://%s/api/v2/spans", *zipkinSvcAddr))
 	exporter := zipkin.NewExporter(reporter, nil)
 	trace.RegisterExporter(exporter)
 
@@ -215,25 +249,6 @@ func initStats(log logrus.FieldLogger, exporter *prometheus.Exporter) {
 	} else {
 		log.Info("Registered grpc default client views")
 	}
-}
-
-func initTracing(log logrus.FieldLogger) {
-	// This is a demo app with low QPS. trace.AlwaysSample() is used here
-	// to make sure traces are available for observation and analysis.
-	// In a production environment or high QPS setup please use
-	// trace.ProbabilitySampler set at the desired probability.
-	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
-
-	initJaegerTracing(log)
-	initZipkinTracing(log)
-}
-
-func mustMapEnv(target *string, envKey string) {
-	v := os.Getenv(envKey)
-	if v == "" {
-		panic(fmt.Sprintf("environment variable %q not set", envKey))
-	}
-	*target = v
 }
 
 func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {

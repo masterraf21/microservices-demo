@@ -4,9 +4,9 @@ on:
   push:
     tags:
       - v*
-    pull_request:
-      branches:
-        - master
+    branches:
+      - master
+  pull_request:
 
 jobs:
   test:
@@ -33,6 +33,7 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
     needs: test
     strategy:
       matrix:

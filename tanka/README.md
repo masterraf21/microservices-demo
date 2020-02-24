@@ -15,6 +15,25 @@ The file structure is as follow :
 
 By design, different versions of one micro-service is supposed to be deployed in the same namespace. 
 
+## Defaults
+Default ports used by each service:
+
+| Service Name            | Env Variable                  | port  |
+| ----------------------- | ----------------------------- | ----- |
+| adservice               | AD_SERVICE_ADDR               | 9555  |
+| apiservice              | API_SERVICE_ADDR              | 8080  |
+| cartservice             | CART_SERVICE_ADDR             | 7070  |
+| checkoutservice         | CHECKOUT_SERVICE_ADDR         | 5050  |
+| currencyservice         | CURRENCY_SERVICE_ADDR         | 7000  |
+| emailservice            | EMAIL_SERVICE_ADDR            | 8080  |
+| frontend                | FRONTEND_ADDR                 | 8080  |
+| paymentservice          | PAYMENT_SERVICE_ADDR          | 50051 |
+| productcatalogservice   | PRODUCT_CATALOG_SERVICE_ADDR  | 3550  |
+| recommendationservice   | RECOMMENDATION_SERVICE_ADDR   | 8080  |
+| redisservice            | REDIS_SERVICE_ADDR            | 6379  |
+| shippingservice         | SHIPPING_SERVICE_ADDR         | 50051 |
+
+
 ## Build
 
 First [install Tanka](https://tanka.dev/install), then go in the tanka folder.
