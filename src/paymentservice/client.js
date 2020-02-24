@@ -19,51 +19,43 @@
 
 const path = require('path');
 const grpc = require('grpc');
-const leftPad = require('pad-left');
 const pino = require('pino');
 
 const PROTO_PATH = path.join(__dirname, './proto/demo.proto');
 const PORT = 7000;
 
 const shopProto = grpc.load(PROTO_PATH).hipstershop;
-const client = new shopProto.CurrencyService(`localhost:${PORT}`,
+const client = new shopProto.PaymentService(`localhost:${PORT}`,
   grpc.credentials.createInsecure());
 
 const logger = pino({
-  name: 'currencyservice-client',
+  name: 'paymentservice-client',
   messageKey: 'message',
   changeLevelName: 'severity',
   useLevelLabels: true
 });
 
 const request = {
-  from: {
-    currency_code: 'CHF',
-    units: 300,
+  amount: {
+    currency_code: "USD",
+    units: 100,
     nanos: 0
   },
-  to_code: 'EUR'
+  credit_card: {
+    credit_card_number: "11",
+    credit_card_cvv: 233,
+    credit_card_expiration_year: 22,
+    credit_card_expiration_month: 10
+  }
 };
 
-function _moneyToString (m) {
-  return `${m.units}.${m.nanos.toString().padStart(9,'0')} ${m.currency_code}`;
-}
-
-client.getSupportedCurrencies({}, (err, response) => {
+client.charge(request, (err, response) => {
   if (err) {
-    logger.error(`Error in getSupportedCurrencies: ${err}`);
+    logger.error(`Error in charge: ${err}`);
   } else {
-    logger.info(`Currency codes: ${response.currency_codes}`);
+    logger.info(`Transaction Id: ${response.transaction_id}`);
   }
-});
-
-client.convert(request, (err, response) => {
-  if (err) {
-    logger.error(`Error in convert: ${err}`);
-  } else {
-    logger.info(`Convert: ${_moneyToString(request.from)} to ${_moneyToString(response)}`);
-  }
-});
+})
 
 const PROTO_HEALTH_PATH = path.join(__dirname, './proto/grpc/health/v1/health.proto');
 const healthProto = grpc.load(PROTO_HEALTH_PATH).grpc.health.v1;

@@ -15,6 +15,7 @@
     "@grpc/proto-loader": "^0.3.0",
     "@opencensus/exporter-zipkin": "0.0.19",
     "@opencensus/nodejs": "0.0.19",
+    "@opencensus/core": "0.0.19",
     "async": "^1.5.2",
     "google-protobuf": "^3.0.0",
     "grpc": "^1.22.2",

@@ -31,6 +31,7 @@ const healthProto = _loadProto(HEALTH_PROTO_PATH).grpc.health.v1;
 const tracing = require('@opencensus/nodejs');
 const { plugin } = require('@opencensus/instrumentation-grpc');
 const { ZipkinTraceExporter } = require('@opencensus/exporter-zipkin');
+const { ConsoleExporter } = require('@opencensus/core');
 const tracer = setupTracerAndExporters();
 
 const logger = pino({
@@ -81,9 +82,12 @@ function _carry (amount) {
  * Lists the supported currencies
  */
 function getSupportedCurrencies (call, callback) {
-  logger.info('Getting supported currencies...');
-  _getCurrencyData((data) => {
-    callback(null, {currency_codes: Object.keys(data)});
+  tracer.startRootSpan({ name: 'grpc.hipstershop.CurrencyService/GetSupportedCurrencies' }, rootSpan => {
+    logger.info('Getting supported currencies...');
+    _getCurrencyData((data) => {
+      callback(null, {currency_codes: Object.keys(data)});
+    });
+    rootSpan.end();
   });
 }
 
@@ -91,37 +95,40 @@ function getSupportedCurrencies (call, callback) {
  * Converts between currencies
  */
 function convert (call, callback) {
-  logger.info('received conversion request');
-  try {
-    _getCurrencyData((data) => {
-      const request = call.request;
+  tracer.startRootSpan({ name: 'grpc.hipstershop.CurrencyService/Convert' }, rootSpan => {
+    logger.info('received conversion request');
+    try {
+      _getCurrencyData((data) => {
+        const request = call.request;
 
-      // Convert: from_currency --> EUR
-      const from = request.from;
-      const euros = _carry({
-        units: from.units / data[from.currency_code],
-        nanos: from.nanos / data[from.currency_code]
+        // Convert: from_currency --> EUR
+        const from = request.from;
+        const euros = _carry({
+          units: from.units / data[from.currency_code],
+          nanos: from.nanos / data[from.currency_code]
+        });
+
+        euros.nanos = Math.round(euros.nanos);
+
+        // Convert: EUR --> to_currency
+        const result = _carry({
+          units: euros.units * data[request.to_code],
+          nanos: euros.nanos * data[request.to_code]
+        });
+
+        result.units = Math.floor(result.units);
+        result.nanos = Math.floor(result.nanos);
+        result.currency_code = request.to_code;
+
+        logger.info(`conversion request successful`);
+        callback(null, result);
       });
-
-      euros.nanos = Math.round(euros.nanos);
-
-      // Convert: EUR --> to_currency
-      const result = _carry({
-        units: euros.units * data[request.to_code],
-        nanos: euros.nanos * data[request.to_code]
-      });
-
-      result.units = Math.floor(result.units);
-      result.nanos = Math.floor(result.nanos);
-      result.currency_code = request.to_code;
-
-      logger.info(`conversion request successful`);
-      callback(null, result);
-    });
-  } catch (err) {
-    logger.error(`conversion request failed: ${err}`);
-    callback(err.message);
-  }
+    } catch (err) {
+      logger.error(`conversion request failed: ${err}`);
+      callback(err.message);
+    }
+    rootSpan.end();
+  });
 }
 
 /**
@@ -158,6 +165,14 @@ function setupTracerAndExporters () {
     serviceName: 'currencyservice-server'
   };
 
+  const defaultBufferConfig = {
+    bufferSize: 1,
+    bufferTimeout: 20000, // time in milliseconds
+  };
+
+  // Console exporter can print spans to stdout
+  const consoleExporter = new ConsoleExporter(defaultBufferConfig);
+
   // Creates Zipkin exporter
   const exporter = new ZipkinTraceExporter(zipkinOptions);
 
@@ -174,7 +189,7 @@ function setupTracerAndExporters () {
   const version = require(path.join(basedir, 'package.json')).version;
 
   // Enables GRPC plugin: Method that enables the instrumentation patch.
-  plugin.enable(grpc, tracer, version, /** plugin options */{}, basedir);
+  // plugin.enable(grpc, tracer, version, /** plugin options */{}, basedir);
 
   return tracer;
 }

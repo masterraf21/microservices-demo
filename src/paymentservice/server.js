@@ -23,6 +23,7 @@ const charge = require('./charge');
 const tracing = require('@opencensus/nodejs');
 const { plugin } = require('@opencensus/instrumentation-grpc');
 const { ZipkinTraceExporter } = require('@opencensus/exporter-zipkin');
+const { ConsoleExporter } = require('@opencensus/core');
 const tracer = setupTracerAndExporters();
 
 const logger = pino({
@@ -40,6 +41,14 @@ function setupTracerAndExporters () {
     console.warn('Unable to start Zipking, please define ZIPKIN_SERVICE_ADDR');
     return null
   }
+
+  const defaultBufferConfig = {
+    bufferSize: 1,
+    bufferTimeout: 20000, // time in milliseconds
+  };
+
+  // Console exporter can print spans to stdout
+  const consoleExporter = new ConsoleExporter(defaultBufferConfig);
   
   const zipkinOptions = {
     url: "http://" + ZIPKIN_SERVICE_ADDR + "/api/v2/spans",
@@ -62,7 +71,7 @@ function setupTracerAndExporters () {
   const version = require(path.join(basedir, 'package.json')).version;
 
   // Enables GRPC plugin: Method that enables the instrumentation patch.
-  plugin.enable(grpc, tracer, version, /** plugin options */{}, basedir);
+  // plugin.enable(grpc, tracer, version, /** plugin options */{}, basedir);
 
   return tracer;
 }
@@ -86,14 +95,17 @@ class HipsterShopServer {
    * @param {*} callback  fn(err, ChargeResponse)
    */
   static ChargeServiceHandler (call, callback) {
-    try {
-      logger.info(`PaymentService#Charge invoked with request ${JSON.stringify(call.request)}`);
-      const response = charge(call.request);
-      callback(null, response);
-    } catch (err) {
-      console.warn(err);
-      callback(err);
-    }
+    tracer.startRootSpan({ name: 'grpc.hipstershop.PaymentService/Charge'}, rootSpan => {
+      try {
+        logger.info(`PaymentService#Charge invoked with request ${JSON.stringify(call.request)}`);
+        const response = charge(call.request);
+        callback(null, response);
+      } catch (err) {
+        console.warn(err);
+        callback(err);
+      }
+      rootSpan.end();
+    });
   }
 
   static CheckHandler (call, callback) {
