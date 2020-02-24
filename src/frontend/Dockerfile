@@ -4,10 +4,12 @@ RUN apk add --no-cache ca-certificates git && \
       chmod +x /go/bin/dep
 
 ENV PROJECT github.com/GoogleCloudPlatform/microservices-demo/src/frontend
+ARG FRONTEND_VERSION="0.1.4-dev"
+
 WORKDIR /go/src/$PROJECT
 
 COPY . .
-RUN go install .
+RUN go install -v -ldflags "-X main.version=${FRONTEND_VERSION}" .
 
 FROM alpine as release
 RUN apk add --no-cache ca-certificates \

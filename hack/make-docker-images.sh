@@ -33,7 +33,7 @@ while IFS= read -d $'\0' -r dir; do
         (
             cd "${dir}"
             log "Building: ${image}"
-            docker build -t "${image}" .
+            docker build -t "${image}" --build-arg FRONTEND_VERSION=${TAG} .
 
             log "Pushing: ${image}"
             docker push "${image}"
