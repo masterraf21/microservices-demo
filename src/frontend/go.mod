@@ -1,4 +1,4 @@
-module github.com/GoogleCloudPlatform/microservices-demo/src/frontend
+module github.com/tetratelabs/microservices-demo/src/frontend
 
 go 1.13
 
