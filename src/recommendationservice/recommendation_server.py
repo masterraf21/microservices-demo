@@ -88,6 +88,7 @@ if __name__ == "__main__":
     logger.info("initializing recommendationservice")
 
     port = os.environ.get('PORT', "8080")
+    healthPort = os.environ.get('HEALTH_PORT', "8081")
     catalog_addr = os.environ.get('PRODUCT_CATALOG_SERVICE_ADDR', '')
     if catalog_addr == "":
         raise Exception('PRODUCT_CATALOG_SERVICE_ADDR environment variable not set')
@@ -98,20 +99,25 @@ if __name__ == "__main__":
     # create gRPC server
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
                       interceptors=(tracer_interceptor,))
+    healthServer = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
 
     # add class to gRPC server
     service = RecommendationService()
     demo_pb2_grpc.add_RecommendationServiceServicer_to_server(service, server)
-    health_pb2_grpc.add_HealthServicer_to_server(service, server)
+    health_pb2_grpc.add_HealthServicer_to_server(service, healthServer)
 
     # start server
     logger.info("listening on port: " + port)
     server.add_insecure_port('[::]:'+port)
     server.start()
 
+    logger.info("listening on healthPort: " + healthPort)
+    healthServer.add_insecure_port('[::]:'+healthPort)
+    healthServer.start()
     # keep alive
     try:
          while True:
             time.sleep(10000)
     except KeyboardInterrupt:
             server.stop(0)
+            healthServer.stop(0)

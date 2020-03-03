@@ -55,6 +55,7 @@ var (
 
 	port        = "3550"
 	metricsPort = "3551"
+	healthPort  = "3552"
 
 	reloadCatalog bool
 )
@@ -113,8 +114,13 @@ func main() {
 		port = os.Getenv("PORT")
 	}
 	log.Infof("starting grpc server at :%s", port)
-	run(port)
+	run(port, true)
 
+	if os.Getenv("HEALTH_PORT") != "" {
+		healthPort = os.Getenv("HEALTH_PORT")
+	}
+	log.Infof("starting grpc server for health at :%s", healthPort)
+	run(healthPort, false)
 	if os.Getenv("METRICSPORT") != "" {
 		metricsPort = os.Getenv("METRICSPORT")
 	}
@@ -123,15 +129,20 @@ func main() {
 	select {}
 }
 
-func run(port string) string {
+func run(port string, tracingEnabled bool) string {
 	l, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
 		log.Fatal(err)
 	}
-	srv := grpc.NewServer(grpc.StatsHandler(&ocgrpc.ServerHandler{}))
+	var srv *grpc.Server
 	svc := &productCatalog{}
-	pb.RegisterProductCatalogServiceServer(srv, svc)
-	healthpb.RegisterHealthServer(srv, svc)
+	if tracingEnabled {
+		srv = grpc.NewServer(grpc.StatsHandler(&ocgrpc.ServerHandler{}))
+		pb.RegisterProductCatalogServiceServer(srv, svc)
+	} else {
+		srv = grpc.NewServer()
+		healthpb.RegisterHealthServer(srv, svc)
+	}
 	go srv.Serve(l)
 	return l.Addr().String()
 }

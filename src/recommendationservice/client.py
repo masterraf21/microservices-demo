@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     # set up server stub
     channel = grpc.insecure_channel('localhost:'+port)
-    channel = grpc.intercept_channel(channel, tracer_interceptor)
+    # channel = grpc.intercept_channel(channel, tracer_interceptor)
     stub = demo_pb2_grpc.RecommendationServiceStub(channel)
     # form request
     request = demo_pb2.ListRecommendationsRequest(user_id="test", product_ids=["test"])
