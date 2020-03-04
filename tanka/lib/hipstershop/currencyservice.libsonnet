@@ -19,8 +19,7 @@
       },
       labels: {app: "currencyservice"},
       env: {
-        PORT: "%s" % $._config.currencyservice.port,
-        HEALTH_PORT: "%s" % $._config.currencyservice.ports[0].port
+        PORT: "%s" % $._config.currencyservice.port
     },
       readinessProbe: container.mixin.readinessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port,]),
       livenessProbe: container.mixin.livenessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port,]),
