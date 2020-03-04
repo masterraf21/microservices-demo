@@ -14,7 +14,6 @@
 
 const path = require('path');
 const grpc = require('grpc');
-const healthGrpc = require('grpc');
 const pino = require('pino');
 const protoLoader = require('@grpc/proto-loader');
 
@@ -22,8 +21,9 @@ const charge = require('./charge');
 
 // tracing stuff
 const tracing = require('@opencensus/nodejs');
-const { plugin } = require('@opencensus/instrumentation-grpc');
+const { plugin, GrpcPlugin } = require('@opencensus/instrumentation-grpc');
 const { ZipkinTraceExporter } = require('@opencensus/exporter-zipkin');
+const { ConsoleExporter } = require('@opencensus/core');
 const tracer = setupTracerAndExporters();
 
 const logger = pino({
@@ -41,6 +41,14 @@ function setupTracerAndExporters () {
     console.warn('Unable to start Zipking, please define ZIPKIN_SERVICE_ADDR');
     return null
   }
+
+  const defaultBufferConfig = {
+    bufferSize: 1,
+    bufferTimeout: 20000, // time in milliseconds
+  };
+
+  // Console exporter can print spans to stdout
+  const consoleExporter = new ConsoleExporter(defaultBufferConfig);
   
   const zipkinOptions = {
     url: "http://" + ZIPKIN_SERVICE_ADDR + "/api/v2/spans",
@@ -63,15 +71,14 @@ function setupTracerAndExporters () {
   const version = require(path.join(basedir, 'package.json')).version;
 
   // Enables GRPC plugin: Method that enables the instrumentation patch.
-  plugin.enable(grpc, tracer, version, /** plugin options */{}, basedir);
+  // plugin.enable(grpc, tracer, version, /** plugin options */{}, basedir);
 
   return tracer;
 }
 
 class HipsterShopServer {
-  constructor (protoRoot, port = HipsterShopServer.PORT, healthPort = HipsterShopServer.HEALTH_PORT) {
+  constructor (protoRoot, port = HipsterShopServer.PORT) {
     this.port = port;
-    this.healthPort = healthPort;
 
     this.packages = {
       hipsterShop: this.loadProto(path.join(protoRoot, 'demo.proto')),
@@ -79,8 +86,24 @@ class HipsterShopServer {
     };
 
     this.server = new grpc.Server();
-    this.healthServer = new healthGrpc.Server();
     this.loadAllProtos(protoRoot);
+  }
+
+  static _newTraceOptions (name, metadata) {
+    const traceOptions = {
+      name: name,
+      kind: "SERVER"
+    };
+  
+    const spanContext = GrpcPlugin.getSpanContext(metadata);
+    if (spanContext) {
+      traceOptions.spanContext = spanContext;
+    }
+    logger.info(
+      'path func: %s',
+      JSON.stringify(traceOptions)
+    );
+    return traceOptions;
   }
 
   /**
@@ -89,14 +112,17 @@ class HipsterShopServer {
    * @param {*} callback  fn(err, ChargeResponse)
    */
   static ChargeServiceHandler (call, callback) {
-    try {
-      logger.info(`PaymentService#Charge invoked with request ${JSON.stringify(call.request)}`);
-      const response = charge(call.request);
-      callback(null, response);
-    } catch (err) {
-      console.warn(err);
-      callback(err);
-    }
+    tracer.startRootSpan(HipsterShopServer._newTraceOptions('grpc.hipstershop.PaymentService/Charge', call.metadata), rootSpan => {
+      try {
+        logger.info(`PaymentService#Charge invoked with request ${JSON.stringify(call.request)}`);
+        const response = charge(call.request);
+        callback(null, response);
+      } catch (err) {
+        console.warn(err);
+        callback(err);
+      }
+      rootSpan.end();
+    });
   }
 
   static CheckHandler (call, callback) {
@@ -107,9 +133,6 @@ class HipsterShopServer {
     this.server.bind(`0.0.0.0:${this.port}`, grpc.ServerCredentials.createInsecure());
     logger.info(`PaymentService grpc server listening on ${this.port}`);
     this.server.start();
-    this.healthServer.bind(`0.0.0.0:${this.healthPort}`, healthGrpc.ServerCredentials.createInsecure());
-    logger.info(`HealthService grpc server listening on ${this.healthPort}`);
-    this.healthServer.start();
   }
 
   loadProto (path) {
@@ -137,7 +160,7 @@ class HipsterShopServer {
       }
     );
 
-    this.healthServer.addService(
+    this.server.addService(
       healthPackage.Health.service,
       {
         check: HipsterShopServer.CheckHandler.bind(this)
@@ -147,6 +170,5 @@ class HipsterShopServer {
 }
 
 HipsterShopServer.PORT = process.env.PORT;
-HipsterShopServer.HEALTH_PORT = process.env.HEALTH_PORT;
 
 module.exports = HipsterShopServer;

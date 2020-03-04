@@ -23,7 +23,6 @@ const pino = require('pino');
 
 const PROTO_PATH = path.join(__dirname, './proto/demo.proto');
 const PORT = 7000;
-const HEALTH_PORT = 7001;
 
 const shopProto = grpc.load(PROTO_PATH).hipstershop;
 const client = new shopProto.PaymentService(`localhost:${PORT}`,
@@ -60,7 +59,7 @@ client.charge(request, (err, response) => {
 
 const PROTO_HEALTH_PATH = path.join(__dirname, './proto/grpc/health/v1/health.proto');
 const healthProto = grpc.load(PROTO_HEALTH_PATH).grpc.health.v1;
-const healthClient = new healthProto.Health(`localhost:${HEALTH_PORT}`,
+const healthClient = new healthProto.Health(`localhost:${PORT}`,
   grpc.credentials.createInsecure());
 
 const healthRequest = {
