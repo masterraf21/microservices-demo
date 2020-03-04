@@ -123,12 +123,18 @@
       local config = $._config[type],
       local podImage=if std.length(image)==3 then '%s/%s:%s' % [image.repo,image.name,image.tag] else '%s/%s:%s' % [config.image.repo,config.image.name,config.image.tag],
       local labels = config.labels+{version: version, project: $._config.project},
+      local ports = if 'ports' in config then std.flattenArrays([[{portName: config.portName, port: config.port}], config.ports]) else [{portName: config.portName, port: config.port}],
 
       deployment: deploy.new(name=name, replicas=1, podLabels=labels, containers=[
         container.new(name, podImage)
-        + container.withPorts(
-            [port.new(config.portName, config.port)]
-          )
+        + (
+            container.withPorts(
+                [
+                  port.new(x.portName, x.port),
+                  for x in ports
+                ]
+              )
+        )
         + config.livenessProbe
         + config.readinessProbe
         + config.limits

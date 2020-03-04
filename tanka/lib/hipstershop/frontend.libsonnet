@@ -30,11 +30,11 @@
         // BANNER_COLOR: "red",
         // JAEGER_SERVICE_ADDR: "jaeger-collector:14268",
       },
-      readinessProbe: container.mixin.readinessProbe.httpGet.withPath("/_healthz")
+      readinessProbe: container.mixin.readinessProbe.httpGet.withPath("/healthz")
         + container.mixin.readinessProbe.httpGet.withPort(self.port)
         + container.mixin.readinessProbe.httpGet.withHttpHeaders($.envList({Cookie: "shop_session-id=x-readiness-probe"}),)
         + container.mixin.readinessProbe.withInitialDelaySeconds(10),
-      livenessProbe: container.mixin.livenessProbe.httpGet.withPath("/_healthz")
+      livenessProbe: container.mixin.livenessProbe.httpGet.withPath("/healthz")
         + container.mixin.livenessProbe.httpGet.withPort(self.port)
         + container.mixin.livenessProbe.httpGet.withHttpHeaders($.envList({Cookie: "shop_session-id=x-readiness-probe"}),)
         + container.mixin.livenessProbe.withInitialDelaySeconds(10),

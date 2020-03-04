@@ -12,6 +12,7 @@
       namespace: $._config.namespace, //set a default namespace if not overrided in the main file
       port: 7000,
       portName: "grpc",
+      ports: [{ portName: "health", port: 7001 }],
       image: {
         repo: $._config.image.repo,
         name: "currencyservice",
@@ -19,10 +20,11 @@
       },
       labels: {app: "currencyservice"},
       env: {
-        PORT: "%s" % $._config.currencyservice.port
+        PORT: "%s" % $._config.currencyservice.port,
+        HEALTH_PORT: "%s" % $._config.currencyservice.ports[0].port
     },
-      readinessProbe: container.mixin.readinessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port,]),
-      livenessProbe: container.mixin.livenessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port,]),
+      readinessProbe: container.mixin.readinessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.ports[0].port,]),
+      livenessProbe: container.mixin.livenessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.ports[0].port,]),
       limits: container.mixin.resources.withLimits({cpu: "200m", memory: "128Mi"}),
       requests: container.mixin.resources.withRequests({cpu: "100m", memory: "64Mi"}),
       deploymentExtra: {},

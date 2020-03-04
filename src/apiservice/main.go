@@ -141,7 +141,9 @@ func main() {
 	r.HandleFunc(apiPath+"/logout", svc.logoutHandler).Methods(http.MethodGet)
 	r.HandleFunc(apiPath+"/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost)
 	r.HandleFunc("/robots.txt", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "User-agent: *\nDisallow: /") })
-	r.HandleFunc("/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "ok") })
+	// Opencensus-go ignore "/healthz" by default, refer to below link for more details
+	// https://github.com/census-instrumentation/opencensus-go/blob/aad2c527c5defcf89b5afab7f37274304195a6b2/plugin/ochttp/trace.go#L231
+	r.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "ok") })
 
 	// also init the prometheus handler
 	initPrometheusStats(log, r)

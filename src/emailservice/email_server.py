@@ -128,6 +128,7 @@ class HealthCheck():
 def start(dummy_mode):
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
                        interceptors=(tracer_interceptor,))
+  healthServer = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
   service = None
   if dummy_mode:
     service = DummyEmailService()
@@ -135,17 +136,22 @@ def start(dummy_mode):
     raise Exception('non-dummy mode not implemented yet')
 
   demo_pb2_grpc.add_EmailServiceServicer_to_server(service, server)
-  health_pb2_grpc.add_HealthServicer_to_server(service, server)
+  health_pb2_grpc.add_HealthServicer_to_server(HealthCheck(), healthServer)
 
   port = os.environ.get('PORT', "8080")
   logger.info("listening on port: "+port)
   server.add_insecure_port('[::]:'+port)
   server.start()
+  healthPort = os.environ.get('HEALTH_PORT', "8081")
+  logger.info("listening on port: "+healthPort)
+  healthServer.add_insecure_port('[::]:'+healthPort)
+  healthServer.start()
   try:
     while True:
       time.sleep(3600)
   except KeyboardInterrupt:
     server.stop(0)
+    healthServer.stop(0)
 
 def initStackdriverProfiling():
   project_id = None

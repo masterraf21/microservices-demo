@@ -41,9 +41,10 @@ import (
 )
 
 const (
-	listenPort  = "5050"
-	metricsPort = "5051"
-	usdCurrency = "USD"
+	listenPort       = "5050"
+	metricsPort      = "5051"
+	healthListenPort = "5052"
+	usdCurrency      = "USD"
 )
 
 var log *logrus.Logger
@@ -97,9 +98,26 @@ func main() {
 	// start metrics endpoint
 	go initPrometheusStats()
 
+	go initHealthServer()
+
 	srv := grpc.NewServer(grpc.StatsHandler(&ocgrpc.ServerHandler{}))
 	pb.RegisterCheckoutServiceServer(srv, svc)
-	healthpb.RegisterHealthServer(srv, svc)
+	log.Infof("starting to listen on tcp: %q", lis.Addr().String())
+	err = srv.Serve(lis)
+	log.Fatal(err)
+}
+
+func initHealthServer() {
+	port := healthListenPort
+	if os.Getenv("HEALTH_PORT") != "" {
+		port = os.Getenv("HEALTH_PORT")
+	}
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
+	if err != nil {
+		log.Fatal(err)
+	}
+	srv := grpc.NewServer()
+	healthpb.RegisterHealthServer(srv, new(checkoutService))
 	log.Infof("starting to listen on tcp: %q", lis.Addr().String())
 	err = srv.Serve(lis)
 	log.Fatal(err)

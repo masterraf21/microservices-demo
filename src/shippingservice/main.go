@@ -43,6 +43,7 @@ import (
 const (
 	defaultPort = "50051"
 	metricsPort = "50052"
+	healthPort  = "50053"
 )
 
 var log *logrus.Logger
@@ -77,9 +78,27 @@ func main() {
 	srv := grpc.NewServer(grpc.StatsHandler(&ocgrpc.ServerHandler{}))
 	svc := &server{}
 	pb.RegisterShippingServiceServer(srv, svc)
-	healthpb.RegisterHealthServer(srv, svc)
 	log.Infof("Shipping Service listening on port %s", port)
 
+	hPort := healthPort
+	if value, ok := os.LookupEnv("HEALTH_PORT"); ok {
+		hPort = value
+	}
+	hPort = fmt.Sprintf(":%s", hPort)
+
+	hLis, err := net.Listen("tcp", hPort)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	hSrv := grpc.NewServer()
+	healthpb.RegisterHealthServer(hSrv, svc)
+	log.Infof("Health Service listening on port %s", hPort)
+	reflection.Register(hSrv)
+	go func() {
+		if err := hSrv.Serve(hLis); err != nil {
+			log.Fatalf("failed to serve: %v", err)
+		}
+	}()
 	// start metrics server
 	go initPrometheusStats()
 
