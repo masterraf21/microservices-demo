@@ -19,8 +19,7 @@
       },
       labels: {app: "paymentservice"},
       env: {
-        PORT: "%s" % $._config.paymentservice.port,
-        HEALTH_PORT: "%s" % $._config.paymentservice.ports[0].port,
+        PORT: "%s" % $._config.paymentservice.port
     },
       readinessProbe: container.mixin.readinessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port,]),
       livenessProbe: container.mixin.livenessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port,]),
