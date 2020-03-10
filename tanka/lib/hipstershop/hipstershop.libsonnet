@@ -24,13 +24,13 @@
   _config+:: {
     image: {
       repo: "microservicesdemomesh",
-      tag: "v0.1.4",
+      tag: "v0.1.5",
     },
     // define defaults values to add to each micro-service
     default+: {
       URL:  "%s.%s:%s" % [self.app, self.namespace, self.port],
       env+: {
-        ZIPKIN_SERVICE_ADDR: "zipkin.kube-system:9411",
+        // ZIPKIN_SERVICE_ADDR: "zipkin.kube-system:9411",
       },
     },
 
