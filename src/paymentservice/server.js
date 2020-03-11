@@ -37,26 +37,26 @@ const logger = pino({
 function setupTracerAndExporters () {
   // grab Zipkin address from env variables
   const ZIPKIN_SERVICE_ADDR = process.env['ZIPKIN_SERVICE_ADDR'];
-  if (!ZIPKIN_SERVICE_ADDR) {
-    console.warn('Unable to start Zipking, please define ZIPKIN_SERVICE_ADDR');
-    return null
-  }
 
   const defaultBufferConfig = {
     bufferSize: 1,
     bufferTimeout: 20000, // time in milliseconds
   };
 
-  // Console exporter can print spans to stdout
-  const consoleExporter = new ConsoleExporter(defaultBufferConfig);
-  
   const zipkinOptions = {
     url: "http://" + ZIPKIN_SERVICE_ADDR + "/api/v2/spans",
     serviceName: 'paymentservice-server'
   };
 
-  // Creates Zipkin exporter
-  const exporter = new ZipkinTraceExporter(zipkinOptions);
+  let exporter;
+
+  if (ZIPKIN_SERVICE_ADDR) {
+    // Creates Zipkin exporter
+    exporter = new ZipkinTraceExporter(zipkinOptions);
+  } else {
+    // Console exporter can print spans to stdout
+    exporter = new ConsoleExporter(defaultBufferConfig);
+  }
 
   // Starts Stackdriver exporter
   tracing.registerExporter(exporter).start();

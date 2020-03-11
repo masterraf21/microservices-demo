@@ -171,10 +171,6 @@ function main () {
 function setupTracerAndExporters () {
   // grab Zipkin address from env variables
   const ZIPKIN_SERVICE_ADDR = process.env['ZIPKIN_SERVICE_ADDR'];
-  if (!ZIPKIN_SERVICE_ADDR) {
-    console.warn('Unable to start Zipking, please define ZIPKIN_SERVICE_ADDR');
-    return null
-  }
   
   const zipkinOptions = {
     url: "http://" + ZIPKIN_SERVICE_ADDR + "/api/v2/spans",
@@ -186,11 +182,15 @@ function setupTracerAndExporters () {
     bufferTimeout: 20000, // time in milliseconds
   };
 
-  // Console exporter can print spans to stdout
-  const consoleExporter = new ConsoleExporter(defaultBufferConfig);
+  let exporter;
 
-  // Creates Zipkin exporter
-  const exporter = new ZipkinTraceExporter(zipkinOptions);
+  if (ZIPKIN_SERVICE_ADDR) {
+    // Creates Zipkin exporter
+    exporter = new ZipkinTraceExporter(zipkinOptions);
+  } else {
+    // Console exporter can print spans to stdout
+    exporter = new ConsoleExporter(defaultBufferConfig);
+  }
 
   // Starts Stackdriver exporter
   tracing.registerExporter(exporter).start();
