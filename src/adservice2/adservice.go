@@ -24,7 +24,7 @@ import (
 
 type Ad struct {
 	Text     string   `json:"text"`
-	Redirect string   `json:"redirect"`
+	Redirect string   `json:"redirect_url"`
 	Tags     []string `json:"tags"`
 }
 

@@ -15,9 +15,13 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
+	"runtime"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -26,7 +30,7 @@ import (
 
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/plugin/ochttp"
-	_ "go.opencensus.io/plugin/ochttp/propagation/b3"
+	"go.opencensus.io/plugin/ochttp/propagation/b3"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/trace"
 
@@ -47,11 +51,17 @@ var (
 	zipkinSvcAddr = flag.String("ZIPKIN_SERVICE_ADDR", "", "URL to Zipkin Tracing agent (ex: zipkin:9411)")
 )
 
+func printVersion() {
+	fmt.Printf("Go Version: %s", runtime.Version())
+	fmt.Printf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH)
+	fmt.Printf("vuedashd Version: %v", version)
+}
+
 func main() {
 	// parse flags
 	flag.Parse()
 	if *displayVersion {
-		fmt.Println(version)
+		printVersion()
 		os.Exit(0)
 	}
 
@@ -82,30 +92,67 @@ func main() {
 		log.Fatalf("error parsing Ads json file %s", err)
 	}
 
-	randomAd := a.getRandomAds()
-	log.Infof("got Ad %v", randomAd)
-	log.Infof("index %v", a.adsIndex)
-	catAds := a.getAdsByCategory("photography")
-	log.Infof("photography %v", catAds)
-	// r := mux.NewRouter()
+	// debug
+	// randomAd := a.getRandomAds()
+	// log.Infof("got Ad %v", randomAd)
+	// log.Infof("index %v", a.adsIndex)
+	// catAds := a.getAdsByCategory("photography")
+	// log.Infof("photography %v", catAds)
+
+	r := mux.NewRouter()
 	// r.HandleFunc("/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)
-	// r.HandleFunc("/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)
-	// r.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "ok") })
+	r.HandleFunc("/ad", a.randomAdHandler).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc("/ads/{category}", a.categoryAdHandler).Methods(http.MethodGet, http.MethodHead)
+
+	// healthz basic
+	r.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		m := map[string]interface{}{"version": version, "status": "OK"}
+
+		b, err := json.Marshal(m)
+		if err != nil {
+			http.Error(w, "Bad version set", 500)
+			return
+		}
+
+		w.Write(b)
+	})
 
 	// also init the prometheus handler
-	// go initTracing(log)
-	// initPrometheusStats(log, r)
+	go initTracing(log)
+	initPrometheusStats(log, r)
 
-	// var handler http.Handler = r
+	var handler http.Handler = r
 	// handler = &logHandler{log: log, next: handler} // add logging
 	// handler = ensureSessionID(handler)             // add session ID
-	// handler = &ochttp.Handler{                     // add opencensus instrumentation
-	// 	Handler:     handler,
-	// 	Propagation: &b3.HTTPFormat{}
-	// }
+	handler = &ochttp.Handler{ // add opencensus instrumentation
+		Handler:     handler,
+		Propagation: &b3.HTTPFormat{},
+	}
 
-	log.Infof("starting server on " + *srvURL)
-	// log.Fatal(http.ListenAndServe(*srvURL, handler))
+	srv := &http.Server{
+		Handler: handler,
+		Addr:    *srvURL,
+		// Good practice: enforce timeouts for servers you create!
+		WriteTimeout: 360 * time.Second,
+		ReadTimeout:  360 * time.Second,
+	}
+
+	go func() {
+		log.Infof("starting server on %s", *srvURL)
+		log.Fatal(srv.ListenAndServe())
+	}()
+
+	// trap SIGINT to trigger a shutdown.
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	for {
+		select {
+		case <-signals:
+			ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+			srv.Shutdown(ctx)
+			return
+		}
+	}
 }
 
 func initTracing(log *logrus.Logger) {
