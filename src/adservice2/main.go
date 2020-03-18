@@ -72,12 +72,21 @@ func main() {
 	}
 	log.Level = currLogLevel
 
-	svc := &adserviceServer{
-		adFile: *adFile,
+	a := &adserviceServer{
+		adFile:   *adFile,
+		adsIndex: make(map[string][]int),
 	}
 
-	svc.loadAdsFile()
+	err = a.loadAdsFile()
+	if err != nil {
+		log.Fatalf("error parsing Ads json file %s", err)
+	}
 
+	randomAd := a.getRandomAds()
+	log.Infof("got Ad %v", randomAd)
+	log.Infof("index %v", a.adsIndex)
+	catAds := a.getAdsByCategory("photography")
+	log.Infof("photography %v", catAds)
 	// r := mux.NewRouter()
 	// r.HandleFunc("/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)
 	// r.HandleFunc("/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)

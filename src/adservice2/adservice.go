@@ -18,43 +18,65 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
+	"time"
 )
 
-// var Ads []Ad
-
-// type Ad []struct {
-// 	Text     string   `json:"text"`
-// 	Redirect string   `json:"redirect"`
-// 	Tags     []string `json:"tags"`
-// }
-
-type Ads []struct {
+type Ad struct {
 	Text     string   `json:"text"`
 	Redirect string   `json:"redirect"`
 	Tags     []string `json:"tags"`
 }
 
 type adserviceServer struct {
-	adFile string
-	ads    Ads
+	adFile   string
+	ads      []Ad
+	adsIndex map[string][]int
 }
 
-func (a *adserviceServer) loadAdsFile() {
-
+func (a *adserviceServer) loadAdsFile() error {
 	data, err := ioutil.ReadFile(a.adFile)
 	if err != nil {
-		fmt.Print(err)
+		return err
 	}
 	err = json.Unmarshal(data, &a.ads)
 	if err != nil {
-		fmt.Println("error:", err)
+		return err
+	}
+	fmt.Printf("found %d ads\n", len(a.ads))
+
+	// index ads by tags
+	for i, ad := range a.ads {
+		for _, tag := range ad.Tags {
+			a.adsIndex[tag] = append(a.adsIndex[tag], i)
+		}
+	}
+	return nil
+}
+
+// indexAds index ads by tags
+func (a *adserviceServer) indexAds() {
+	for i, ad := range a.ads {
+		for _, tag := range ad.Tags {
+			a.adsIndex[tag] = append(a.adsIndex[tag], i)
+		}
 	}
 }
 
-func (*adserviceServer) getRandomAds() {}
+// getRandomAds return a random ad
+func (a *adserviceServer) getRandomAds() Ad {
+	rand.Seed(time.Now().Unix())
+	n := rand.Int() % len(a.ads)
 
-// func (*adserviceServer) getAdsByCategory(tag string) Ad {
-// 	var ad Ad
+	return a.ads[n]
+}
 
-// 	return ad
-// }
+// getAdsByCategory return all ads in a category
+func (a *adserviceServer) getAdsByCategory(tag string) []Ad {
+	var ads []Ad
+
+	for _, ad := range a.adsIndex[tag] {
+		ads = append(ads, a.ads[ad])
+	}
+	return ads
+}
