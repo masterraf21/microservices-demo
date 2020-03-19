@@ -25,9 +25,9 @@ import (
 // randomAdHandler return a random add
 // r.HandleFunc("/ad", a.randomAdHandler)
 func (a *adserviceServer) randomAdHandler(w http.ResponseWriter, r *http.Request) {
-	ad := a.getRandomAds()
+	ads := a.getRandomAds()
 
-	respondWithJSON(w, http.StatusOK, ad)
+	respondWithJSON(w, http.StatusOK, ads)
 }
 
 // categoryAdHandler return all ads from a category

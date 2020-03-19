@@ -44,7 +44,7 @@ var (
 	version        = "no version set"
 	displayVersion = flag.Bool("version", false, "Show version and quit")
 	logLevel       = flag.String("logLevel", "warn", "log level from debug, info, warning, error. When debug, genetate 100% Tracing")
-	srvURL         = flag.String("srvURL", ":8080", "IP and port to bind, localhost:8080 or :8080")
+	srvURL         = flag.String("srvURL", ":9555", "IP and port to bind, localhost:9555 or :9555")
 	adFile         = flag.String("adFile", "ads.json", "path to the Ads json file")
 
 	jaegerSvcAddr = flag.String("JAEGER_SERVICE_ADDR", "", "URL to Jaeger Tracing agent")
@@ -92,15 +92,7 @@ func main() {
 		log.Fatalf("error parsing Ads json file %s", err)
 	}
 
-	// debug
-	// randomAd := a.getRandomAds()
-	// log.Infof("got Ad %v", randomAd)
-	// log.Infof("index %v", a.adsIndex)
-	// catAds := a.getAdsByCategory("photography")
-	// log.Infof("photography %v", catAds)
-
 	r := mux.NewRouter()
-	// r.HandleFunc("/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc("/ad", a.randomAdHandler).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc("/ads/{category}", a.categoryAdHandler).Methods(http.MethodGet, http.MethodHead)
 
@@ -122,8 +114,6 @@ func main() {
 	initPrometheusStats(log, r)
 
 	var handler http.Handler = r
-	// handler = &logHandler{log: log, next: handler} // add logging
-	// handler = ensureSessionID(handler)             // add session ID
 	handler = &ochttp.Handler{ // add opencensus instrumentation
 		Handler:     handler,
 		Propagation: &b3.HTTPFormat{},

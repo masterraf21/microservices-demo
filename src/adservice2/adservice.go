@@ -64,16 +64,16 @@ func (a *adserviceServer) indexAds() {
 }
 
 // getRandomAds return a random ad
-func (a *adserviceServer) getRandomAds() Ad {
+func (a *adserviceServer) getRandomAds() []Ad {
 	rand.Seed(time.Now().Unix())
 	n := rand.Int() % len(a.ads)
 
-	return a.ads[n]
+	return a.ads[n : n+1]
 }
 
 // getAdsByCategory return all ads in a category
 func (a *adserviceServer) getAdsByCategory(tag string) []Ad {
-	var ads []Ad
+	ads := []Ad{}
 
 	for _, ad := range a.adsIndex[tag] {
 		ads = append(ads, a.ads[ad])

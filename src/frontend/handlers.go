@@ -16,8 +16,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
@@ -80,7 +82,7 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		"products":      ps,
 		"cart_size":     len(cart),
 		"banner_color":  os.Getenv("BANNER_COLOR"), // illustrates canary deployments
-		"ad":            fe.chooseAd(r.Context(), []string{}, log),
+		"ad":            fe.chooseAdRest(r.Context(), []string{}, log),
 	}); err != nil {
 		log.Error(err)
 	}
@@ -133,7 +135,7 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 	if err := templates.ExecuteTemplate(w, "product", map[string]interface{}{
 		"session_id":      sessionID(r),
 		"request_id":      r.Context().Value(ctxKeyRequestID{}),
-		"ad":              fe.chooseAd(r.Context(), p.Categories, log),
+		"ad":              fe.chooseAdRest(r.Context(), p.Categories, log),
 		"user_currency":   currentCurrency(r),
 		"currencies":      currencies,
 		"product":         product,
@@ -352,6 +354,50 @@ func (fe *frontendServer) chooseAd(ctx context.Context, ctxKeys []string, log lo
 		log.WithField("error", err).Warn("failed to retrieve ads")
 		return nil
 	}
+	return ads[rand.Intn(len(ads))]
+}
+
+// chooseAdRest queries for advertisements available using a REST endpoint
+// and randomly chooses one, if available. It ignores the error retrieving the ad since it is not critical.
+func (fe *frontendServer) chooseAdRest(ctx context.Context, ctxKeys []string, log logrus.FieldLogger) *pb.Ad {
+	// call a random ad if no category is given
+	var adURL string
+	if len(ctxKeys) == 0 {
+		adURL = fmt.Sprintf("http://%s/ad", *adSvcAddr)
+	} else {
+		adURL = fmt.Sprintf("http://%s/ads/%s", *adSvcAddr, ctxKeys[0])
+	}
+
+	response, err := http.Get(adURL)
+	if err != nil {
+		log.WithField("error", err).Warn("failed to retrieve ads")
+		return nil
+	}
+	data, _ := ioutil.ReadAll(response.Body)
+
+	type JsonAd struct {
+		Text     string   `json:"text"`
+		Redirect string   `json:"redirect_url"`
+		Tags     []string `json:"tags"`
+	}
+
+	responseObject := []JsonAd{}
+
+	err = json.Unmarshal(data, &responseObject)
+	if err != nil {
+		log.WithField("error", err).Warn("failed to unmarshal Json Ads")
+		return nil
+	}
+
+	ads := []*pb.Ad{}
+	for _, ad := range responseObject {
+		newad := &pb.Ad{
+			RedirectUrl: ad.Redirect,
+			Text:        ad.Text,
+		}
+		ads = append(ads, newad)
+	}
+
 	return ads[rand.Intn(len(ads))]
 }
 
