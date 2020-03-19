@@ -11,21 +11,24 @@
       app: "adservice",
       namespace: $._config.namespace, //set a default namespace if not overrided in the main file
       port: 9555,
-      portName: "grpc",
+      portName: "http",
       image: {
         repo: $._config.image.repo,
-        name: "adservice",
+        name: "adservice2",
         tag: $._config.image.tag,
       },
       labels: {app: "adservice"},
-      env: {PORT: "%s" % $._config.adservice.port},
-      readinessProbe: container.mixin.readinessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port ])
-                    + container.mixin.readinessProbe.withInitialDelaySeconds(15),
-      livenessProbe: container.mixin.livenessProbe.exec.withCommand(["/bin/grpc_health_probe", "-addr=:%s" % self.port ])
-                    + container.mixin.livenessProbe.withInitialDelaySeconds(15),
+      env: {
+        SRVURL: ":%s" % $._config.adservice.port,
+        LOGLEVEL: "debug"
+        },
+      readinessProbe: container.mixin.readinessProbe.httpGet.withPath("/healthz")
+        + container.mixin.readinessProbe.httpGet.withPort(self.port),
+      livenessProbe: container.mixin.livenessProbe.httpGet.withPath("/healthz")
+        + container.mixin.livenessProbe.httpGet.withPort(self.port),
       limits: container.mixin.resources.withLimits({cpu: "300m", memory: "300Mi"}),
       requests: container.mixin.resources.withRequests({cpu: "200m", memory: "180Mi"}),
-      deploymentExtra: {},
+      deploymentExtra: deploy.mixin.spec.template.metadata.withAnnotations({"sidecar.istio.io/rewriteAppHTTPProbers": "true"}),
       serviceExtra: {},
     }
   }

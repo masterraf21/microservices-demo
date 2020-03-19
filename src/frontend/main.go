@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -169,8 +170,31 @@ func main() {
 		Handler:     handler,
 		Propagation: &b3.HTTPFormat{}}
 
-	log.Infof("starting server on " + *srvURL)
-	log.Fatal(http.ListenAndServe(*srvURL, handler))
+	srv := &http.Server{
+		Handler: handler,
+		Addr:    *srvURL,
+		// Good practice: enforce timeouts for servers you create!
+		WriteTimeout: 360 * time.Second,
+		ReadTimeout:  360 * time.Second,
+	}
+
+	go func() {
+		log.Infof("starting server on %s", *srvURL)
+		log.Fatal(srv.ListenAndServe())
+	}()
+
+	// trap SIGINT to trigger a shutdown.
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	for {
+		select {
+		case <-signals:
+			ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+			srv.Shutdown(ctx)
+			return
+		}
+	}
+
 }
 
 func initTracing(log *logrus.Logger) {
