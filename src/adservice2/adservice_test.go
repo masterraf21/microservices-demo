@@ -30,7 +30,7 @@ func TestGetRandomAds(t *testing.T) {
 
 	adservice.indexAds()
 	rndAd := adservice.getRandomAds()
-	if len(rndAd.Tags) == 0 {
+	if len(rndAd) == 0 {
 		t.Errorf("random add not received. got %v", rndAd)
 	}
 }
