@@ -49,6 +49,7 @@ var (
 
 	jaegerSvcAddr = flag.String("JAEGER_SERVICE_ADDR", "", "URL to Jaeger Tracing agent")
 	zipkinSvcAddr = flag.String("ZIPKIN_SERVICE_ADDR", "", "URL to Zipkin Tracing agent (ex: zipkin:9411)")
+	extraLatency  = flag.Duration("EXTRA_LATENCY", 0*time.Second, "lattency to add to service response")
 )
 
 func printVersion() {
@@ -81,6 +82,11 @@ func main() {
 		log.Fatalf("error parsing Log Level %s", err)
 	}
 	log.Level = currLogLevel
+
+	// set injected latency
+	if *extraLatency > 0 {
+		log.Infof("extra latency enabled (duration: %v)", *extraLatency)
+	}
 
 	a := &adserviceServer{
 		adFile:   *adFile,

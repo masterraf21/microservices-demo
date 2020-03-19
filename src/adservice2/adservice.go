@@ -46,11 +46,8 @@ func (a *adserviceServer) loadAdsFile() error {
 	fmt.Printf("found %d ads\n", len(a.ads))
 
 	// index ads by tags
-	for i, ad := range a.ads {
-		for _, tag := range ad.Tags {
-			a.adsIndex[tag] = append(a.adsIndex[tag], i)
-		}
-	}
+	a.indexAds()
+
 	return nil
 }
 

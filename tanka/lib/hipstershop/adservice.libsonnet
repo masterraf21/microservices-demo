@@ -14,7 +14,7 @@
       portName: "http",
       image: {
         repo: $._config.image.repo,
-        name: "adservice",
+        name: "adservice2",
         tag: $._config.image.tag,
       },
       labels: {app: "adservice"},
@@ -23,16 +23,12 @@
         LOGLEVEL: "debug"
         },
       readinessProbe: container.mixin.readinessProbe.httpGet.withPath("/healthz")
-        + container.mixin.readinessProbe.httpGet.withPort(self.port)
-        + container.mixin.readinessProbe.httpGet.withHttpHeaders($.envList({Cookie: "shop_session-id=x-readiness-probe"}),)
-        + container.mixin.readinessProbe.withInitialDelaySeconds(10),
+        + container.mixin.readinessProbe.httpGet.withPort(self.port),
       livenessProbe: container.mixin.livenessProbe.httpGet.withPath("/healthz")
-        + container.mixin.livenessProbe.httpGet.withPort(self.port)
-        + container.mixin.livenessProbe.httpGet.withHttpHeaders($.envList({Cookie: "shop_session-id=x-readiness-probe"}),)
-        + container.mixin.livenessProbe.withInitialDelaySeconds(10),
+        + container.mixin.livenessProbe.httpGet.withPort(self.port),
       limits: container.mixin.resources.withLimits({cpu: "300m", memory: "300Mi"}),
       requests: container.mixin.resources.withRequests({cpu: "200m", memory: "180Mi"}),
-      deploymentExtra: {},
+      deploymentExtra: deploy.mixin.spec.template.metadata.withAnnotations({"sidecar.istio.io/rewriteAppHTTPProbers": "true"}),
       serviceExtra: {},
     }
   }
