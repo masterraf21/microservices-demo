@@ -398,7 +398,10 @@ func (fe *frontendServer) chooseAdRest(ctx context.Context, ctxKeys []string, lo
 		ads = append(ads, newad)
 	}
 
-	return ads[rand.Intn(len(ads))]
+	if len(ads) > 0 {
+		return ads[rand.Intn(len(ads))]
+	}
+	return nil
 }
 
 func renderHTTPError(log logrus.FieldLogger, r *http.Request, w http.ResponseWriter, err error, code int) {

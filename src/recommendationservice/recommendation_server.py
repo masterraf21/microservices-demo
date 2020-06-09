@@ -49,9 +49,10 @@ try:
     logger.info("Skipping Zipkin traces initialization. Set environment variable ZIPKIN_SERVICE_ADDR=<host>:<port> to enable.")
     raise KeyError()
   host, port = zipkin_service_addr.split(":")
-  ze = ZipkinExporter(service_name="recommendationservice-server",
+  ze = ZipkinExporter(
+    service_name="recommendationservice-server",
     host_name=host,
-    port=port,
+    port=int(port),
     endpoint='/api/v2/spans')
   sampler = AlwaysOnSampler()
   tracer = Tracer(exporter=ze, sampler=sampler)
