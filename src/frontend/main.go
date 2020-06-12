@@ -37,6 +37,7 @@ import (
 	"contrib.go.opencensus.io/exporter/jaeger"
 	"contrib.go.opencensus.io/exporter/prometheus"
 	"contrib.go.opencensus.io/exporter/zipkin"
+	openzipkin "github.com/openzipkin/zipkin-go"
 	zipkinhttp "github.com/openzipkin/zipkin-go/reporter/http"
 )
 
@@ -240,8 +241,12 @@ func initZipkinTracing(log *logrus.Logger) {
 		return
 	}
 
+	endpoint, err := openzipkin.NewEndpoint("frontend", "")
+	if err != nil {
+		log.Fatalf("unable to create local endpoint: %+v\n", err)
+	}
 	reporter := zipkinhttp.NewReporter(fmt.Sprintf("http://%s/api/v2/spans", *zipkinSvcAddr))
-	exporter := zipkin.NewExporter(reporter, nil)
+	exporter := zipkin.NewExporter(reporter, endpoint)
 	trace.RegisterExporter(exporter)
 
 	log.Info("zipkin initialization completed.")

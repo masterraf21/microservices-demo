@@ -174,7 +174,7 @@ function setupTracerAndExporters () {
   
   const zipkinOptions = {
     url: "http://" + ZIPKIN_SERVICE_ADDR + "/api/v2/spans",
-    serviceName: 'currencyservice-server'
+    serviceName: 'currencyservice'
   };
 
   const defaultBufferConfig = {
