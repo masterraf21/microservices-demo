@@ -19,6 +19,8 @@ spec:
       version: v1
   template:
     metadata:
+      annotations:
+        sidecar.istio.io/rewriteAppHTTPProbers: "true"
       labels:
         app: adservice
         name: adservice
@@ -27,28 +29,24 @@ spec:
     spec:
       containers:
       - env:
-        - name: PORT
-          value: "9555"
-        - name: ZIPKIN_SERVICE_ADDR
-          value: zipkin.tcc:9411
-        image: microservicesdemomesh/adservice:v0.1.8
+        - name: LOGLEVEL
+          value: debug
+        - name: SRVURL
+          value: :9555
+        image: microservicesdemomesh/adservice2:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
-          exec:
-            command:
-            - /bin/grpc_health_probe
-            - -addr=:9555
-          initialDelaySeconds: 15
+          httpGet:
+            path: /healthz
+            port: 9555
         name: adservice
         ports:
         - containerPort: 9555
-          name: grpc
+          name: http
         readinessProbe:
-          exec:
-            command:
-            - /bin/grpc_health_probe
-            - -addr=:9555
-          initialDelaySeconds: 15
+          httpGet:
+            path: /healthz
+            port: 9555
         resources:
           limits:
             cpu: 300m
@@ -90,6 +88,8 @@ spec:
       - env:
         - name: AD_SERVICE_ADDR
           value: adservice.hipstershop1:9555
+        - name: API_VERSION
+          value: v1
         - name: CART_SERVICE_ADDR
           value: cartservice.hipstershop1:7070
         - name: CHECKOUT_SERVICE_ADDR
@@ -104,8 +104,6 @@ spec:
           value: recommendationservice.hipstershop1:8080
         - name: SHIPPING_SERVICE_ADDR
           value: shippingservice.hipstershop1:50051
-        - name: ZIPKIN_SERVICE_ADDR
-          value: zipkin.tcc:9411
         image: microservicesdemomesh/apiservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
@@ -113,7 +111,7 @@ spec:
             httpHeaders:
             - name: Cookie
               value: shop_session-id=x-readiness-probe
-            path: /_healthz
+            path: /healthz
             port: 8080
           initialDelaySeconds: 10
         name: apiservice
@@ -125,7 +123,7 @@ spec:
             httpHeaders:
             - name: Cookie
               value: shop_session-id=x-readiness-probe
-            path: /_healthz
+            path: /healthz
             port: 8080
           initialDelaySeconds: 10
 ---
@@ -164,8 +162,6 @@ spec:
           value: "7070"
         - name: REDIS_ADDR
           value: redis-cart.hipstershop1:6379
-        - name: ZIPKIN_SERVICE_ADDR
-          value: zipkin.tcc:9411
         image: microservicesdemomesh/cartservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
@@ -229,6 +225,8 @@ spec:
           value: currencyservice.hipstershop1:7000
         - name: EMAIL_SERVICE_ADDR
           value: emailservice.hipstershop1:8080
+        - name: HEALTH_PORT
+          value: "5052"
         - name: PAYMENT_SERVICE_ADDR
           value: paymentservice.hipstershop1:50051
         - name: PORT
@@ -237,24 +235,24 @@ spec:
           value: productcatalogservice.hipstershop1:3550
         - name: SHIPPING_SERVICE_ADDR
           value: shippingservice.hipstershop1:50051
-        - name: ZIPKIN_SERVICE_ADDR
-          value: zipkin.tcc:9411
         image: microservicesdemomesh/checkoutservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
           exec:
             command:
             - /bin/grpc_health_probe
-            - -addr=:5050
+            - -addr=:5052
         name: checkoutservice
         ports:
         - containerPort: 5050
           name: grpc
+        - containerPort: 5052
+          name: health
         readinessProbe:
           exec:
             command:
             - /bin/grpc_health_probe
-            - -addr=:5050
+            - -addr=:5052
         resources:
           limits:
             cpu: 200m
@@ -294,8 +292,6 @@ spec:
       - env:
         - name: PORT
           value: "7000"
-        - name: ZIPKIN_SERVICE_ADDR
-          value: zipkin.tcc:9411
         image: microservicesdemomesh/currencyservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
@@ -351,26 +347,28 @@ spec:
       - env:
         - name: ENABLE_PROFILER
           value: "0"
+        - name: HEALTH_PORT
+          value: "8081"
         - name: PORT
           value: "8080"
-        - name: ZIPKIN_SERVICE_ADDR
-          value: zipkin.tcc:9411
         image: microservicesdemomesh/emailservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
           exec:
             command:
             - /bin/grpc_health_probe
-            - -addr=:8080
+            - -addr=:8081
         name: emailservice
         ports:
         - containerPort: 8080
           name: grpc
+        - containerPort: 8081
+          name: health
         readinessProbe:
           exec:
             command:
             - /bin/grpc_health_probe
-            - -addr=:8080
+            - -addr=:8081
         resources:
           limits:
             cpu: 200m
@@ -418,16 +416,14 @@ spec:
           value: checkoutservice.hipstershop1:5050
         - name: CURRENCY_SERVICE_ADDR
           value: currencyservice.hipstershop1:7000
-        - name: PORT
-          value: "8080"
         - name: PRODUCT_CATALOG_SERVICE_ADDR
           value: productcatalogservice.hipstershop1:3550
         - name: RECOMMENDATION_SERVICE_ADDR
           value: recommendationservice.hipstershop1:8080
         - name: SHIPPING_SERVICE_ADDR
           value: shippingservice.hipstershop1:50051
-        - name: ZIPKIN_SERVICE_ADDR
-          value: zipkin.tcc:9411
+        - name: SRVURL
+          value: :8080
         image: microservicesdemomesh/frontend:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
@@ -435,7 +431,7 @@ spec:
             httpHeaders:
             - name: Cookie
               value: shop_session-id=x-readiness-probe
-            path: /_healthz
+            path: /healthz
             port: 8080
           initialDelaySeconds: 10
         name: frontend
@@ -447,7 +443,7 @@ spec:
             httpHeaders:
             - name: Cookie
               value: shop_session-id=x-readiness-probe
-            path: /_healthz
+            path: /healthz
             port: 8080
           initialDelaySeconds: 10
 ---
@@ -488,8 +484,6 @@ spec:
           value: ignore
         - name: USERS
           value: "10"
-        - name: ZIPKIN_SERVICE_ADDR
-          value: zipkin.tcc:9411
         image: microservicesdemomesh/loadgenerator:v0.1.8
         imagePullPolicy: Always
         name: loadgenerator
@@ -535,8 +529,6 @@ spec:
       - env:
         - name: PORT
           value: "50051"
-        - name: ZIPKIN_SERVICE_ADDR
-          value: zipkin.tcc:9411
         image: microservicesdemomesh/paymentservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
@@ -590,26 +582,28 @@ spec:
     spec:
       containers:
       - env:
+        - name: HEALTH_PORT
+          value: "3552"
         - name: PORT
           value: "3550"
-        - name: ZIPKIN_SERVICE_ADDR
-          value: zipkin.tcc:9411
         image: microservicesdemomesh/productcatalogservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
           exec:
             command:
             - /bin/grpc_health_probe
-            - -addr=:3550
+            - -addr=:3552
         name: productcatalogservice
         ports:
         - containerPort: 3550
           name: grpc
+        - containerPort: 3552
+          name: health
         readinessProbe:
           exec:
             command:
             - /bin/grpc_health_probe
-            - -addr=:3550
+            - -addr=:3552
         resources:
           limits:
             cpu: 200m
@@ -649,28 +643,30 @@ spec:
       - env:
         - name: ENABLE_PROFILER
           value: "0"
+        - name: HEALTH_PORT
+          value: "8081"
         - name: PORT
           value: "8080"
         - name: PRODUCT_CATALOG_SERVICE_ADDR
           value: productcatalogservice.hipstershop1:3550
-        - name: ZIPKIN_SERVICE_ADDR
-          value: zipkin.tcc:9411
         image: microservicesdemomesh/recommendationservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
           exec:
             command:
             - /bin/grpc_health_probe
-            - -addr=:8080
+            - -addr=:8081
         name: recommendationservice
         ports:
         - containerPort: 8080
           name: grpc
+        - containerPort: 8081
+          name: health
         readinessProbe:
           exec:
             command:
             - /bin/grpc_health_probe
-            - -addr=:8080
+            - -addr=:8081
         resources:
           limits:
             cpu: 200m
@@ -707,9 +703,7 @@ spec:
         version: v1
     spec:
       containers:
-      - env:
-        - name: ZIPKIN_SERVICE_ADDR
-          value: zipkin.tcc:9411
+      - env: []
         image: docker.io/library/redis:alpine
         imagePullPolicy: Always
         livenessProbe:
@@ -767,26 +761,28 @@ spec:
     spec:
       containers:
       - env:
+        - name: HEALTH_PORT
+          value: "50053"
         - name: PORT
           value: "50051"
-        - name: ZIPKIN_SERVICE_ADDR
-          value: zipkin.tcc:9411
         image: microservicesdemomesh/shippingservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
           exec:
             command:
             - /bin/grpc_health_probe
-            - -addr=:50051
+            - -addr=:50053
         name: shippingservice
         ports:
         - containerPort: 50051
           name: grpc
+        - containerPort: 50053
+          name: health
         readinessProbe:
           exec:
             command:
             - /bin/grpc_health_probe
-            - -addr=:50051
+            - -addr=:50053
         resources:
           limits:
             cpu: 200m
@@ -807,7 +803,7 @@ metadata:
   namespace: hipstershop1
 spec:
   ports:
-  - name: grpc-adservice
+  - name: http-adservice
     port: 9555
     targetPort: 9555
   selector:
@@ -870,6 +866,9 @@ spec:
   - name: grpc-checkoutservice
     port: 5050
     targetPort: 5050
+  - name: health-checkoutservice
+    port: 5052
+    targetPort: 5052
   selector:
     app: checkoutservice
     project: hipstershop1
@@ -910,6 +909,9 @@ spec:
   - name: grpc-emailservice
     port: 8080
     targetPort: 8080
+  - name: health-emailservice
+    port: 8081
+    targetPort: 8081
   selector:
     app: emailservice
     project: hipstershop1
@@ -970,6 +972,9 @@ spec:
   - name: grpc-productcatalogservice
     port: 3550
     targetPort: 3550
+  - name: health-productcatalogservice
+    port: 3552
+    targetPort: 3552
   selector:
     app: productcatalogservice
     project: hipstershop1
@@ -990,6 +995,9 @@ spec:
   - name: grpc-recommendationservice
     port: 8080
     targetPort: 8080
+  - name: health-recommendationservice
+    port: 8081
+    targetPort: 8081
   selector:
     app: recommendationservice
     project: hipstershop1
@@ -1030,6 +1038,9 @@ spec:
   - name: grpc-shippingservice
     port: 50051
     targetPort: 50051
+  - name: health-shippingservice
+    port: 50053
+    targetPort: 50053
   selector:
     app: shippingservice
     project: hipstershop1

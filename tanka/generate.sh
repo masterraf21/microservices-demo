@@ -15,5 +15,5 @@ do
   echo "procerssing $scenario"
   tk show environments/${scenario} --dangerous-allow-redirect \
   -e manualConfig="{project: \"${PROJECT}\", namespace: \"${NAMESPACE}\"}" \
-  -e selectedApps='[]' > ../hipstershop-${scenario}.yaml
+  -e selectedApps='[]' > ../release/hipstershop-${scenario}.yaml
 done

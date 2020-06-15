@@ -3,10 +3,10 @@ kind: Deployment
 metadata:
   labels:
     app: adservice
-    project: hipstershop1
+    project: hipstershopistio
     version: v1
   name: adservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   minReadySeconds: 10
   replicas: 1
@@ -15,7 +15,7 @@ spec:
     matchLabels:
       app: adservice
       name: adservice
-      project: hipstershop1
+      project: hipstershopistio
       version: v1
   template:
     metadata:
@@ -24,7 +24,7 @@ spec:
       labels:
         app: adservice
         name: adservice
-        project: hipstershop1
+        project: hipstershopistio
         version: v1
     spec:
       containers:
@@ -33,6 +33,8 @@ spec:
           value: debug
         - name: SRVURL
           value: :9555
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.istio-system:9411
         image: microservicesdemomesh/adservice2:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
@@ -59,11 +61,70 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
+    app: adservice
+    project: hipstershopistio
+    version: v2
+  name: adservice-v2
+  namespace: hipstershopistio
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: adservice
+      name: adservice-v2
+      project: hipstershopistio
+      version: v2
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/rewriteAppHTTPProbers: "true"
+      labels:
+        app: adservice
+        name: adservice-v2
+        project: hipstershopistio
+        version: v2
+    spec:
+      containers:
+      - env:
+        - name: LOGLEVEL
+          value: debug
+        - name: SRVURL
+          value: :9555
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.istio-system:9411
+        image: microservicesdemomesh/adservice2:v0.1.8
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9555
+        name: adservice-v2
+        ports:
+        - containerPort: 9555
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 9555
+        resources:
+          limits:
+            cpu: 300m
+            memory: 300Mi
+          requests:
+            cpu: 200m
+            memory: 180Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
     app: apiservice
-    project: hipstershop1
+    project: hipstershopistio
     version: v1
   name: apiservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   minReadySeconds: 10
   replicas: 1
@@ -72,7 +133,7 @@ spec:
     matchLabels:
       app: apiservice
       name: apiservice
-      project: hipstershop1
+      project: hipstershopistio
       version: v1
   template:
     metadata:
@@ -81,29 +142,31 @@ spec:
       labels:
         app: apiservice
         name: apiservice
-        project: hipstershop1
+        project: hipstershopistio
         version: v1
     spec:
       containers:
       - env:
         - name: AD_SERVICE_ADDR
-          value: adservice.hipstershop1:9555
+          value: adservice.hipstershopistio:9555
         - name: API_VERSION
           value: v1
         - name: CART_SERVICE_ADDR
-          value: cartservice.hipstershop1:7070
+          value: cartservice.hipstershopistio:7070
         - name: CHECKOUT_SERVICE_ADDR
-          value: checkoutservice.hipstershop1:5050
+          value: checkoutservice.hipstershopistio:5050
         - name: CURRENCY_SERVICE_ADDR
-          value: currencyservice.hipstershop1:7000
+          value: currencyservice.hipstershopistio:7000
         - name: PORT
           value: "8080"
         - name: PRODUCT_CATALOG_SERVICE_ADDR
-          value: productcatalogservice.hipstershop1:3550
+          value: productcatalogservice.hipstershopistio:3550
         - name: RECOMMENDATION_SERVICE_ADDR
-          value: recommendationservice.hipstershop1:8080
+          value: recommendationservice.hipstershopistio:8080
         - name: SHIPPING_SERVICE_ADDR
-          value: shippingservice.hipstershop1:50051
+          value: shippingservice.hipstershopistio:50051
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.istio-system:9411
         image: microservicesdemomesh/apiservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
@@ -132,10 +195,10 @@ kind: Deployment
 metadata:
   labels:
     app: cartservice
-    project: hipstershop1
+    project: hipstershopistio
     version: v1
   name: cartservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   minReadySeconds: 10
   replicas: 1
@@ -144,14 +207,14 @@ spec:
     matchLabels:
       app: cartservice
       name: cartservice
-      project: hipstershop1
+      project: hipstershopistio
       version: v1
   template:
     metadata:
       labels:
         app: cartservice
         name: cartservice
-        project: hipstershop1
+        project: hipstershopistio
         version: v1
     spec:
       containers:
@@ -161,7 +224,9 @@ spec:
         - name: PORT
           value: "7070"
         - name: REDIS_ADDR
-          value: redis-cart.hipstershop1:6379
+          value: redis-cart.hipstershopistio:6379
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.istio-system:9411
         image: microservicesdemomesh/cartservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
@@ -195,10 +260,10 @@ kind: Deployment
 metadata:
   labels:
     app: checkoutservice
-    project: hipstershop1
+    project: hipstershopistio
     version: v1
   name: checkoutservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   minReadySeconds: 10
   replicas: 1
@@ -207,34 +272,36 @@ spec:
     matchLabels:
       app: checkoutservice
       name: checkoutservice
-      project: hipstershop1
+      project: hipstershopistio
       version: v1
   template:
     metadata:
       labels:
         app: checkoutservice
         name: checkoutservice
-        project: hipstershop1
+        project: hipstershopistio
         version: v1
     spec:
       containers:
       - env:
         - name: CART_SERVICE_ADDR
-          value: cartservice.hipstershop1:7070
+          value: cartservice.hipstershopistio:7070
         - name: CURRENCY_SERVICE_ADDR
-          value: currencyservice.hipstershop1:7000
+          value: currencyservice.hipstershopistio:7000
         - name: EMAIL_SERVICE_ADDR
-          value: emailservice.hipstershop1:8080
+          value: emailservice.hipstershopistio:8080
         - name: HEALTH_PORT
           value: "5052"
         - name: PAYMENT_SERVICE_ADDR
-          value: paymentservice.hipstershop1:50051
+          value: paymentservice.hipstershopistio:50051
         - name: PORT
           value: "5050"
         - name: PRODUCT_CATALOG_SERVICE_ADDR
-          value: productcatalogservice.hipstershop1:3550
+          value: productcatalogservice.hipstershopistio:3550
         - name: SHIPPING_SERVICE_ADDR
-          value: shippingservice.hipstershop1:50051
+          value: shippingservice.hipstershopistio:50051
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.istio-system:9411
         image: microservicesdemomesh/checkoutservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
@@ -265,11 +332,84 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
+    app: checkoutservice
+    project: hipstershopistio
+    version: v2
+  name: checkoutservice-v2
+  namespace: hipstershopistio
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: checkoutservice
+      name: checkoutservice-v2
+      project: hipstershopistio
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: checkoutservice
+        name: checkoutservice-v2
+        project: hipstershopistio
+        version: v2
+    spec:
+      containers:
+      - env:
+        - name: CART_SERVICE_ADDR
+          value: cartservice.hipstershopistio:7070
+        - name: CURRENCY_SERVICE_ADDR
+          value: currencyservice.hipstershopistio:7000
+        - name: EMAIL_SERVICE_ADDR
+          value: emailservice.hipstershopistio:8080
+        - name: HEALTH_PORT
+          value: "5052"
+        - name: PAYMENT_SERVICE_ADDR
+          value: paymentservice.hipstershopistio:50051
+        - name: PORT
+          value: "5050"
+        - name: PRODUCT_CATALOG_SERVICE_ADDR
+          value: productcatalogservice.hipstershopistio:3550
+        - name: SHIPPING_SERVICE_ADDR
+          value: shippingservice.hipstershopistio:50051
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.istio-system:9411
+        image: microservicesdemomesh/checkoutservice:v0.1.8
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:5052
+        name: checkoutservice-v2
+        ports:
+        - containerPort: 5050
+          name: grpc
+        - containerPort: 5052
+          name: health
+        readinessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:5052
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
     app: currencyservice
-    project: hipstershop1
+    project: hipstershopistio
     version: v1
   name: currencyservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   minReadySeconds: 10
   replicas: 1
@@ -278,20 +418,22 @@ spec:
     matchLabels:
       app: currencyservice
       name: currencyservice
-      project: hipstershop1
+      project: hipstershopistio
       version: v1
   template:
     metadata:
       labels:
         app: currencyservice
         name: currencyservice
-        project: hipstershop1
+        project: hipstershopistio
         version: v1
     spec:
       containers:
       - env:
         - name: PORT
           value: "7000"
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.istio-system:9411
         image: microservicesdemomesh/currencyservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
@@ -321,10 +463,10 @@ kind: Deployment
 metadata:
   labels:
     app: emailservice
-    project: hipstershop1
+    project: hipstershopistio
     version: v1
   name: emailservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   minReadySeconds: 10
   replicas: 1
@@ -333,14 +475,14 @@ spec:
     matchLabels:
       app: emailservice
       name: emailservice
-      project: hipstershop1
+      project: hipstershopistio
       version: v1
   template:
     metadata:
       labels:
         app: emailservice
         name: emailservice
-        project: hipstershop1
+        project: hipstershopistio
         version: v1
     spec:
       containers:
@@ -351,6 +493,8 @@ spec:
           value: "8081"
         - name: PORT
           value: "8080"
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.istio-system:9411
         image: microservicesdemomesh/emailservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
@@ -382,10 +526,10 @@ kind: Deployment
 metadata:
   labels:
     app: frontend
-    project: hipstershop1
+    project: hipstershopistio
     version: v1
   name: frontend
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   minReadySeconds: 10
   replicas: 1
@@ -394,7 +538,7 @@ spec:
     matchLabels:
       app: frontend
       name: frontend
-      project: hipstershop1
+      project: hipstershopistio
       version: v1
   template:
     metadata:
@@ -403,27 +547,29 @@ spec:
       labels:
         app: frontend
         name: frontend
-        project: hipstershop1
+        project: hipstershopistio
         version: v1
     spec:
       containers:
       - env:
         - name: AD_SERVICE_ADDR
-          value: adservice.hipstershop1:9555
+          value: adservice.hipstershopistio:9555
         - name: CART_SERVICE_ADDR
-          value: cartservice.hipstershop1:7070
+          value: cartservice.hipstershopistio:7070
         - name: CHECKOUT_SERVICE_ADDR
-          value: checkoutservice.hipstershop1:5050
+          value: checkoutservice.hipstershopistio:5050
         - name: CURRENCY_SERVICE_ADDR
-          value: currencyservice.hipstershop1:7000
+          value: currencyservice.hipstershopistio:7000
         - name: PRODUCT_CATALOG_SERVICE_ADDR
-          value: productcatalogservice.hipstershop1:3550
+          value: productcatalogservice.hipstershopistio:3550
         - name: RECOMMENDATION_SERVICE_ADDR
-          value: recommendationservice.hipstershop1:8080
+          value: recommendationservice.hipstershopistio:8080
         - name: SHIPPING_SERVICE_ADDR
-          value: shippingservice.hipstershop1:50051
+          value: shippingservice.hipstershopistio:50051
         - name: SRVURL
           value: :8080
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.istio-system:9411
         image: microservicesdemomesh/frontend:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
@@ -451,11 +597,85 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
+    app: frontend
+    project: hipstershopistio
+    version: v2
+  name: frontend-v2
+  namespace: hipstershopistio
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: frontend
+      name: frontend-v2
+      project: hipstershopistio
+      version: v2
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/rewriteAppHTTPProbers: "true"
+      labels:
+        app: frontend
+        name: frontend-v2
+        project: hipstershopistio
+        version: v2
+    spec:
+      containers:
+      - env:
+        - name: AD_SERVICE_ADDR
+          value: adservice.hipstershopistio:9555
+        - name: CART_SERVICE_ADDR
+          value: cartservice.hipstershopistio:7070
+        - name: CHECKOUT_SERVICE_ADDR
+          value: checkoutservice.hipstershopistio:5050
+        - name: CURRENCY_SERVICE_ADDR
+          value: currencyservice.hipstershopistio:7000
+        - name: PRODUCT_CATALOG_SERVICE_ADDR
+          value: productcatalogservice.hipstershopistio:3550
+        - name: RECOMMENDATION_SERVICE_ADDR
+          value: recommendationservice.hipstershopistio:8080
+        - name: SHIPPING_SERVICE_ADDR
+          value: shippingservice.hipstershopistio:50051
+        - name: SRVURL
+          value: :8080
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.istio-system:9411
+        - name: BANNER_COLOR
+          value: red
+        image: microservicesdemomesh/frontend:v0.1.8
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            httpHeaders:
+            - name: Cookie
+              value: shop_session-id=x-readiness-probe
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+        name: frontend-v2
+        ports:
+        - containerPort: 8080
+          name: http
+        readinessProbe:
+          httpGet:
+            httpHeaders:
+            - name: Cookie
+              value: shop_session-id=x-readiness-probe
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
     app: loadgenerator
-    project: hipstershop1
+    project: hipstershopistio
     version: v1
   name: loadgenerator
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   minReadySeconds: 10
   replicas: 1
@@ -464,7 +684,7 @@ spec:
     matchLabels:
       app: loadgenerator
       name: loadgenerator
-      project: hipstershop1
+      project: hipstershopistio
       version: v1
   template:
     metadata:
@@ -473,17 +693,21 @@ spec:
       labels:
         app: loadgenerator
         name: loadgenerator
-        project: hipstershop1
+        project: hipstershopistio
         version: v1
     spec:
       containers:
       - env:
         - name: FRONTEND_ADDR
-          value: http://frontend.hipstershop1:8080
+          value: https://hipstershop.add-your-ip.sslip.io
+        - name: FRONTEND_IP
+          value: add-your-ip
         - name: PYTHONWARNINGS
           value: ignore
         - name: USERS
           value: "10"
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.istio-system:9411
         image: microservicesdemomesh/loadgenerator:v0.1.8
         imagePullPolicy: Always
         name: loadgenerator
@@ -503,10 +727,10 @@ kind: Deployment
 metadata:
   labels:
     app: paymentservice
-    project: hipstershop1
+    project: hipstershopistio
     version: v1
   name: paymentservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   minReadySeconds: 10
   replicas: 1
@@ -515,20 +739,22 @@ spec:
     matchLabels:
       app: paymentservice
       name: paymentservice
-      project: hipstershop1
+      project: hipstershopistio
       version: v1
   template:
     metadata:
       labels:
         app: paymentservice
         name: paymentservice
-        project: hipstershop1
+        project: hipstershopistio
         version: v1
     spec:
       containers:
       - env:
         - name: PORT
           value: "50051"
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.istio-system:9411
         image: microservicesdemomesh/paymentservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
@@ -558,10 +784,10 @@ kind: Deployment
 metadata:
   labels:
     app: productcatalogservice
-    project: hipstershop1
+    project: hipstershopistio
     version: v1
   name: productcatalogservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   minReadySeconds: 10
   replicas: 1
@@ -570,22 +796,26 @@ spec:
     matchLabels:
       app: productcatalogservice
       name: productcatalogservice
-      project: hipstershop1
+      project: hipstershopistio
       version: v1
   template:
     metadata:
       labels:
         app: productcatalogservice
         name: productcatalogservice
-        project: hipstershop1
+        project: hipstershopistio
         version: v1
     spec:
       containers:
       - env:
+        - name: DEMO_DEPLOYMENT_ENV_VAR
+          value: none
         - name: HEALTH_PORT
           value: "3552"
         - name: PORT
           value: "3550"
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.istio-system:9411
         image: microservicesdemomesh/productcatalogservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
@@ -616,11 +846,76 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
+    app: productcatalogservice
+    project: hipstershopistio
+    version: v2
+  name: productcatalogservice-slow
+  namespace: hipstershopistio
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: productcatalogservice
+      name: productcatalogservice-slow
+      project: hipstershopistio
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: productcatalogservice
+        name: productcatalogservice-slow
+        project: hipstershopistio
+        version: v2
+    spec:
+      containers:
+      - env:
+        - name: DEMO_DEPLOYMENT_ENV_VAR
+          value: none
+        - name: HEALTH_PORT
+          value: "3552"
+        - name: PORT
+          value: "3550"
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.istio-system:9411
+        - name: EXTRA_LATENCY
+          value: 1.5s
+        image: microservicesdemomesh/productcatalogservice:v0.1.8
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:3552
+        name: productcatalogservice-slow
+        ports:
+        - containerPort: 3550
+          name: grpc
+        - containerPort: 3552
+          name: health
+        readinessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:3552
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
     app: recommendationservice
-    project: hipstershop1
+    project: hipstershopistio
     version: v1
   name: recommendationservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   minReadySeconds: 10
   replicas: 1
@@ -629,14 +924,14 @@ spec:
     matchLabels:
       app: recommendationservice
       name: recommendationservice
-      project: hipstershop1
+      project: hipstershopistio
       version: v1
   template:
     metadata:
       labels:
         app: recommendationservice
         name: recommendationservice
-        project: hipstershop1
+        project: hipstershopistio
         version: v1
     spec:
       containers:
@@ -648,7 +943,9 @@ spec:
         - name: PORT
           value: "8080"
         - name: PRODUCT_CATALOG_SERVICE_ADDR
-          value: productcatalogservice.hipstershop1:3550
+          value: productcatalogservice.hipstershopistio:3550
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.istio-system:9411
         image: microservicesdemomesh/recommendationservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
@@ -680,10 +977,10 @@ kind: Deployment
 metadata:
   labels:
     app: redis-cart
-    project: hipstershop1
+    project: hipstershopistio
     version: v1
   name: redis-cart
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   minReadySeconds: 10
   replicas: 1
@@ -692,18 +989,20 @@ spec:
     matchLabels:
       app: redis-cart
       name: redis-cart
-      project: hipstershop1
+      project: hipstershopistio
       version: v1
   template:
     metadata:
       labels:
         app: redis-cart
         name: redis-cart
-        project: hipstershop1
+        project: hipstershopistio
         version: v1
     spec:
       containers:
-      - env: []
+      - env:
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.istio-system:9411
         image: docker.io/library/redis:alpine
         imagePullPolicy: Always
         livenessProbe:
@@ -737,10 +1036,10 @@ kind: Deployment
 metadata:
   labels:
     app: shippingservice
-    project: hipstershop1
+    project: hipstershopistio
     version: v1
   name: shippingservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   minReadySeconds: 10
   replicas: 1
@@ -749,14 +1048,14 @@ spec:
     matchLabels:
       app: shippingservice
       name: shippingservice
-      project: hipstershop1
+      project: hipstershopistio
       version: v1
   template:
     metadata:
       labels:
         app: shippingservice
         name: shippingservice
-        project: hipstershop1
+        project: hipstershopistio
         version: v1
     spec:
       containers:
@@ -765,6 +1064,8 @@ spec:
           value: "50053"
         - name: PORT
           value: "50051"
+        - name: ZIPKIN_SERVICE_ADDR
+          value: zipkin.istio-system:9411
         image: microservicesdemomesh/shippingservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
@@ -797,10 +1098,10 @@ metadata:
   labels:
     app: adservice
     name: adservice
-    project: hipstershop1
+    project: hipstershopistio
     service: adservice
   name: adservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   ports:
   - name: http-adservice
@@ -808,7 +1109,7 @@ spec:
     targetPort: 9555
   selector:
     app: adservice
-    project: hipstershop1
+    project: hipstershopistio
   type: ClusterIP
 ---
 apiVersion: v1
@@ -817,10 +1118,10 @@ metadata:
   labels:
     app: apiservice
     name: apiservice
-    project: hipstershop1
+    project: hipstershopistio
     service: apiservice
   name: apiservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   ports:
   - name: http-apiservice
@@ -828,7 +1129,7 @@ spec:
     targetPort: 8080
   selector:
     app: apiservice
-    project: hipstershop1
+    project: hipstershopistio
   type: ClusterIP
 ---
 apiVersion: v1
@@ -837,10 +1138,10 @@ metadata:
   labels:
     app: cartservice
     name: cartservice
-    project: hipstershop1
+    project: hipstershopistio
     service: cartservice
   name: cartservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   ports:
   - name: grpc-cartservice
@@ -848,7 +1149,7 @@ spec:
     targetPort: 7070
   selector:
     app: cartservice
-    project: hipstershop1
+    project: hipstershopistio
   type: ClusterIP
 ---
 apiVersion: v1
@@ -857,10 +1158,10 @@ metadata:
   labels:
     app: checkoutservice
     name: checkoutservice
-    project: hipstershop1
+    project: hipstershopistio
     service: checkoutservice
   name: checkoutservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   ports:
   - name: grpc-checkoutservice
@@ -871,7 +1172,7 @@ spec:
     targetPort: 5052
   selector:
     app: checkoutservice
-    project: hipstershop1
+    project: hipstershopistio
   type: ClusterIP
 ---
 apiVersion: v1
@@ -880,10 +1181,10 @@ metadata:
   labels:
     app: currencyservice
     name: currencyservice
-    project: hipstershop1
+    project: hipstershopistio
     service: currencyservice
   name: currencyservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   ports:
   - name: grpc-currencyservice
@@ -891,7 +1192,7 @@ spec:
     targetPort: 7000
   selector:
     app: currencyservice
-    project: hipstershop1
+    project: hipstershopistio
   type: ClusterIP
 ---
 apiVersion: v1
@@ -900,10 +1201,10 @@ metadata:
   labels:
     app: emailservice
     name: emailservice
-    project: hipstershop1
+    project: hipstershopistio
     service: emailservice
   name: emailservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   ports:
   - name: grpc-emailservice
@@ -914,7 +1215,7 @@ spec:
     targetPort: 8081
   selector:
     app: emailservice
-    project: hipstershop1
+    project: hipstershopistio
   type: ClusterIP
 ---
 apiVersion: v1
@@ -923,10 +1224,10 @@ metadata:
   labels:
     app: frontend
     name: frontend
-    project: hipstershop1
+    project: hipstershopistio
     service: frontend
   name: frontend
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   ports:
   - name: http-frontend
@@ -934,7 +1235,7 @@ spec:
     targetPort: 8080
   selector:
     app: frontend
-    project: hipstershop1
+    project: hipstershopistio
   type: ClusterIP
 ---
 apiVersion: v1
@@ -943,10 +1244,10 @@ metadata:
   labels:
     app: paymentservice
     name: paymentservice
-    project: hipstershop1
+    project: hipstershopistio
     service: paymentservice
   name: paymentservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   ports:
   - name: grpc-paymentservice
@@ -954,7 +1255,7 @@ spec:
     targetPort: 50051
   selector:
     app: paymentservice
-    project: hipstershop1
+    project: hipstershopistio
   type: ClusterIP
 ---
 apiVersion: v1
@@ -963,10 +1264,10 @@ metadata:
   labels:
     app: productcatalogservice
     name: productcatalogservice
-    project: hipstershop1
+    project: hipstershopistio
     service: productcatalogservice
   name: productcatalogservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   ports:
   - name: grpc-productcatalogservice
@@ -977,7 +1278,7 @@ spec:
     targetPort: 3552
   selector:
     app: productcatalogservice
-    project: hipstershop1
+    project: hipstershopistio
   type: ClusterIP
 ---
 apiVersion: v1
@@ -986,10 +1287,10 @@ metadata:
   labels:
     app: recommendationservice
     name: recommendationservice
-    project: hipstershop1
+    project: hipstershopistio
     service: recommendationservice
   name: recommendationservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   ports:
   - name: grpc-recommendationservice
@@ -1000,7 +1301,7 @@ spec:
     targetPort: 8081
   selector:
     app: recommendationservice
-    project: hipstershop1
+    project: hipstershopistio
   type: ClusterIP
 ---
 apiVersion: v1
@@ -1009,10 +1310,10 @@ metadata:
   labels:
     app: redis-cart
     name: redis-cart
-    project: hipstershop1
+    project: hipstershopistio
     service: redis-cart
   name: redis-cart
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   ports:
   - name: redis-redis-cart
@@ -1020,7 +1321,7 @@ spec:
     targetPort: 6379
   selector:
     app: redis-cart
-    project: hipstershop1
+    project: hipstershopistio
   type: ClusterIP
 ---
 apiVersion: v1
@@ -1029,10 +1330,10 @@ metadata:
   labels:
     app: shippingservice
     name: shippingservice
-    project: hipstershop1
+    project: hipstershopistio
     service: shippingservice
   name: shippingservice
-  namespace: hipstershop1
+  namespace: hipstershopistio
 spec:
   ports:
   - name: grpc-shippingservice
@@ -1043,5 +1344,5 @@ spec:
     targetPort: 50053
   selector:
     app: shippingservice
-    project: hipstershop1
+    project: hipstershopistio
   type: ClusterIP

@@ -2,8 +2,13 @@
 (import "hipstershop/hipstershop.libsonnet") +
 {
   _config+:: {
-    project: "hipstershopv1v2",
+    project: "hipstershopistio",
     namespace: self.project,
+    default+: {
+      env+: {
+        ZIPKIN_SERVICE_ADDR: "zipkin.istio-system:9411",
+      }
+    },
     adservice+: {
       deployments+: [
         {name: "adservice-v2", version: "v2", withSvc: false, replica: 1, localEnv:{}},
