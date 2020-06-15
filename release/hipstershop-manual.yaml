@@ -31,7 +31,7 @@ spec:
           value: "9555"
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.tcc:9411
-        image: gcr.io/google-samples/microservices-demo/adservice:v0.1.8
+        image: microservicesdemomesh/adservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -106,7 +106,7 @@ spec:
           value: shippingservice.hipstershop1:50051
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.tcc:9411
-        image: gcr.io/google-samples/microservices-demo/apiservice:v0.1.8
+        image: microservicesdemomesh/apiservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
@@ -166,7 +166,7 @@ spec:
           value: redis-cart.hipstershop1:6379
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.tcc:9411
-        image: gcr.io/google-samples/microservices-demo/cartservice:v0.1.8
+        image: microservicesdemomesh/cartservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -239,7 +239,7 @@ spec:
           value: shippingservice.hipstershop1:50051
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.tcc:9411
-        image: gcr.io/google-samples/microservices-demo/checkoutservice:v0.1.8
+        image: microservicesdemomesh/checkoutservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -296,7 +296,7 @@ spec:
           value: "7000"
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.tcc:9411
-        image: gcr.io/google-samples/microservices-demo/currencyservice:v0.1.8
+        image: microservicesdemomesh/currencyservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -355,7 +355,7 @@ spec:
           value: "8080"
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.tcc:9411
-        image: gcr.io/google-samples/microservices-demo/emailservice:v0.1.8
+        image: microservicesdemomesh/emailservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -428,7 +428,7 @@ spec:
           value: shippingservice.hipstershop1:50051
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.tcc:9411
-        image: gcr.io/google-samples/microservices-demo/frontend:v0.1.8
+        image: microservicesdemomesh/frontend:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
@@ -490,7 +490,7 @@ spec:
           value: "10"
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.tcc:9411
-        image: gcr.io/google-samples/microservices-demo/loadgenerator:v0.1.8
+        image: microservicesdemomesh/loadgenerator:v0.1.8
         imagePullPolicy: Always
         name: loadgenerator
         ports:
@@ -537,7 +537,7 @@ spec:
           value: "50051"
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.tcc:9411
-        image: gcr.io/google-samples/microservices-demo/paymentservice:v0.1.8
+        image: microservicesdemomesh/paymentservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -594,7 +594,7 @@ spec:
           value: "3550"
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.tcc:9411
-        image: gcr.io/google-samples/microservices-demo/productcatalogservice:v0.1.8
+        image: microservicesdemomesh/productcatalogservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -655,7 +655,7 @@ spec:
           value: productcatalogservice.hipstershop1:3550
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.tcc:9411
-        image: gcr.io/google-samples/microservices-demo/recommendationservice:v0.1.8
+        image: microservicesdemomesh/recommendationservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -771,7 +771,7 @@ spec:
           value: "50051"
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.tcc:9411
-        image: gcr.io/google-samples/microservices-demo/shippingservice:v0.1.8
+        image: microservicesdemomesh/shippingservice:v0.1.8
         imagePullPolicy: Always
         livenessProbe:
           exec:
