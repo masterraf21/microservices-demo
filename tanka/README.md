@@ -109,7 +109,7 @@ tk show tanka/environments/manual --dangerous-allow-redirect -e selectedApps='["
       {name: "adservice-v2", version: "v2", withSvc: false, replica: 2, localEnv:{}, image:{
         repo: "myrepo",
         name: "adservice",
-        tag: "v0.2"
+        tag: "v0.1.8"
       }},
     ],
   },

@@ -6,6 +6,7 @@ Changes includes :
 - using `Zipkin` traces instead of `Jaeger`/`Stackdriver`
 - adding HTTP and GRPC metrics where needed
 - added `apiservice` which is a clone of the `frontend` but only return json output
+- rewrite of `adservice` in Go, using an HTTP endpoint (instead of GRPC) to support various demo cases
 
 ## Build status
 ![CI](https://github.com/tetratelabs/microservices-demo/workflows/CI/badge.svg)
@@ -17,6 +18,10 @@ Changes includes :
 - 20200129
   - All Go microservices are updated to use Zipkin and provide a `/metrics` endpoint for metrology
   - Loadgenerator can connect to an HTTPS endpoint
+- 20200614
+  - `adservice` rewrite in GO + HTTP endpoint
+  - added a `service` name to all Zipkin traces
+  - tagged release v0.1.8
 
 ## building images
 Images are built automatically using a Github Action.
@@ -26,13 +31,13 @@ You can build the images using the scripts located in the `hack` folder:
 
 ```
 # build only the image of emailservice
-TAG=v1.2.3 REPO_PREFIX=my.docker.hub ./hack/make-docker-images-nopush.sh emailservice
+TAG=v0.1.8 REPO_PREFIX=my.docker.hub ./hack/make-docker-images-nopush.sh emailservice
 
 # build all images locally (no push)
-TAG=v1.2.3 REPO_PREFIX=my.docker.hub ./hack/make-docker-images-nopush.sh
+TAG=v0.1.8 REPO_PREFIX=my.docker.hub ./hack/make-docker-images-nopush.sh
 
 # build all and push to Docker Registry
-TAG=v1.2.3 REPO_PREFIX=my.docker.hub ./hack/make-docker-images.sh
+TAG=v0.1.8 REPO_PREFIX=my.docker.hub ./hack/make-docker-images.sh
 ```
 
 ## Original Project Description

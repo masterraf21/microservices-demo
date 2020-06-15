@@ -176,7 +176,7 @@ func initJaegerTracing(log *logrus.Logger) {
 	exporter, err := jaeger.NewExporter(jaeger.Options{
 		Endpoint: fmt.Sprintf("http://%s", *jaegerSvcAddr),
 		Process: jaeger.Process{
-			ServiceName: "frontend",
+			ServiceName: "adservice",
 		},
 	})
 	if err != nil {
@@ -194,8 +194,12 @@ func initZipkinTracing(log *logrus.Logger) {
 		return
 	}
 
+	endpoint, err := openzipkin.NewEndpoint("adservice", "")
+	if err != nil {
+		log.Fatalf("unable to create local endpoint: %+v\n", err)
+	}
 	reporter := zipkinhttp.NewReporter(fmt.Sprintf("http://%s/api/v2/spans", *zipkinSvcAddr))
-	exporter := zipkin.NewExporter(reporter, nil)
+	exporter := zipkin.NewExporter(reporter, endpoint)
 	trace.RegisterExporter(exporter)
 
 	log.Info("zipkin initialization completed.")
