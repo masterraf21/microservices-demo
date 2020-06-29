@@ -117,6 +117,7 @@
   local container = $.core.v1.container,
   local port = $.core.v1.containerPort,
   local service = $.core.v1.service,
+  local sa = $.core.v1.serviceAccount,
 
   hipstershopApp:: {
     new(type="", name="", version="v1", replica=1, withSvc=false, localEnv={}, image={},):: {
@@ -124,6 +125,9 @@
       local podImage=if std.length(image)==3 then '%s/%s:%s' % [image.repo,image.name,image.tag] else '%s/%s:%s' % [config.image.repo,config.image.name,config.image.tag],
       local labels = config.labels+{version: version, project: $._config.project},
       local ports = if 'ports' in config then std.flattenArrays([[{portName: config.portName, port: config.port}], config.ports]) else [{portName: config.portName, port: config.port}],
+
+      serviceaccount: sa.new(name=name)
+        + sa.mixin.metadata.withNamespace(config.namespace),
 
       deployment: deploy.new(name=name, replicas=1, podLabels=labels, containers=[
         container.new(name, podImage)
@@ -142,6 +146,7 @@
         + container.withEnv($.envList(config.env) + $.envList(localEnv))
         + container.withImagePullPolicy("Always")
       ]) 
+      + deploy.mixin.spec.template.spec.withServiceAccountName(name)
       + deploy.mixin.metadata.withLabelsMixin(labels)
       + deploy.mixin.metadata.withLabelsMixin(labels)
       + deploy.mixin.metadata.withNamespace(config.namespace)
