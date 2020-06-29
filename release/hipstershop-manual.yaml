@@ -54,6 +54,7 @@ spec:
           requests:
             cpu: 200m
             memory: 180Mi
+      serviceAccountName: adservice
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -126,6 +127,7 @@ spec:
             path: /healthz
             port: 8080
           initialDelaySeconds: 10
+      serviceAccountName: apiservice
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -189,6 +191,7 @@ spec:
           requests:
             cpu: 200m
             memory: 64Mi
+      serviceAccountName: cartservice
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -260,6 +263,7 @@ spec:
           requests:
             cpu: 100m
             memory: 64Mi
+      serviceAccountName: checkoutservice
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -315,6 +319,7 @@ spec:
           requests:
             cpu: 100m
             memory: 64Mi
+      serviceAccountName: currencyservice
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -376,6 +381,7 @@ spec:
           requests:
             cpu: 100m
             memory: 64Mi
+      serviceAccountName: emailservice
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -446,6 +452,7 @@ spec:
             path: /healthz
             port: 8080
           initialDelaySeconds: 10
+      serviceAccountName: frontend
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -497,6 +504,7 @@ spec:
           requests:
             cpu: 300m
             memory: 256Mi
+      serviceAccountName: loadgenerator
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -552,6 +560,7 @@ spec:
           requests:
             cpu: 100m
             memory: 64Mi
+      serviceAccountName: paymentservice
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -611,6 +620,7 @@ spec:
           requests:
             cpu: 100m
             memory: 64Mi
+      serviceAccountName: productcatalogservice
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -674,6 +684,7 @@ spec:
           requests:
             cpu: 100m
             memory: 220Mi
+      serviceAccountName: recommendationservice
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -728,6 +739,7 @@ spec:
         volumeMounts:
         - mountPath: /data
           name: redis-data
+      serviceAccountName: redis-cart
       volumes:
       - emptyDir: {}
         name: redis-data
@@ -790,6 +802,7 @@ spec:
           requests:
             cpu: 100m
             memory: 64Mi
+      serviceAccountName: shippingservice
 ---
 apiVersion: v1
 kind: Service
@@ -1045,3 +1058,81 @@ spec:
     app: shippingservice
     project: hipstershop1
   type: ClusterIP
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: adservice
+  namespace: hipstershop1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: apiservice
+  namespace: hipstershop1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cartservice
+  namespace: hipstershop1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: checkoutservice
+  namespace: hipstershop1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: currencyservice
+  namespace: hipstershop1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: emailservice
+  namespace: hipstershop1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: frontend
+  namespace: hipstershop1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: loadgenerator
+  namespace: hipstershop1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: paymentservice
+  namespace: hipstershop1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: productcatalogservice
+  namespace: hipstershop1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: recommendationservice
+  namespace: hipstershop1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: redis-cart
+  namespace: hipstershop1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: shippingservice
+  namespace: hipstershop1
