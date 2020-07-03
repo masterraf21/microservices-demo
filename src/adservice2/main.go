@@ -51,6 +51,7 @@ var (
 	jaegerSvcAddr = flag.String("JAEGER_SERVICE_ADDR", "", "URL to Jaeger Tracing agent")
 	zipkinSvcAddr = flag.String("ZIPKIN_SERVICE_ADDR", "", "URL to Zipkin Tracing agent (ex: zipkin:9411)")
 	extraLatency  = flag.Duration("EXTRA_LATENCY", 0*time.Second, "lattency to add to service response")
+	startDelay    = flag.Duration("startDelay", 0*time.Second, "delay before service is available (return 503 failed probe)")
 )
 
 func printVersion() {
@@ -89,6 +90,13 @@ func main() {
 		log.Infof("extra latency enabled (duration: %v)", *extraLatency)
 	}
 
+	// set injected latency
+	if *startDelay > 0 {
+		log.Infof("start delay enabled (duration: %v)", *startDelay)
+	}
+	// ready time
+	readyTime := time.Now().Add(*startDelay)
+
 	a := &adserviceServer{
 		adFile:   *adFile,
 		adsIndex: make(map[string][]int),
@@ -105,6 +113,12 @@ func main() {
 
 	// healthz basic
 	r.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		// return 503 if the start delay is not overdue
+		if time.Until(readyTime) > 0 {
+			http.Error(w, `{"status": "FAIL", "error": "service not ready"}`, 503)
+			return
+		}
+
 		m := map[string]interface{}{"version": version, "status": "OK"}
 
 		b, err := json.Marshal(m)

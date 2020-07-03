@@ -33,7 +33,7 @@ spec:
           value: debug
         - name: SRVURL
           value: :9555
-        image: microservicesdemomesh/adservice2:v0.1.8
+        image: microservicesdemomesh/adservice2:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
@@ -105,7 +105,7 @@ spec:
           value: recommendationservice.hipstershop1:8080
         - name: SHIPPING_SERVICE_ADDR
           value: shippingservice.hipstershop1:50051
-        image: microservicesdemomesh/apiservice:v0.1.8
+        image: microservicesdemomesh/apiservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
@@ -164,7 +164,7 @@ spec:
           value: "7070"
         - name: REDIS_ADDR
           value: redis-cart.hipstershop1:6379
-        image: microservicesdemomesh/cartservice:v0.1.8
+        image: microservicesdemomesh/cartservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -238,7 +238,7 @@ spec:
           value: productcatalogservice.hipstershop1:3550
         - name: SHIPPING_SERVICE_ADDR
           value: shippingservice.hipstershop1:50051
-        image: microservicesdemomesh/checkoutservice:v0.1.8
+        image: microservicesdemomesh/checkoutservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -296,7 +296,7 @@ spec:
       - env:
         - name: PORT
           value: "7000"
-        image: microservicesdemomesh/currencyservice:v0.1.8
+        image: microservicesdemomesh/currencyservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -356,7 +356,7 @@ spec:
           value: "8081"
         - name: PORT
           value: "8080"
-        image: microservicesdemomesh/emailservice:v0.1.8
+        image: microservicesdemomesh/emailservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -430,7 +430,7 @@ spec:
           value: shippingservice.hipstershop1:50051
         - name: SRVURL
           value: :8080
-        image: microservicesdemomesh/frontend:v0.1.8
+        image: microservicesdemomesh/frontend:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
@@ -491,7 +491,7 @@ spec:
           value: ignore
         - name: USERS
           value: "10"
-        image: microservicesdemomesh/loadgenerator:v0.1.8
+        image: microservicesdemomesh/loadgenerator:v0.1.9
         imagePullPolicy: Always
         name: loadgenerator
         ports:
@@ -537,7 +537,7 @@ spec:
       - env:
         - name: PORT
           value: "50051"
-        image: microservicesdemomesh/paymentservice:v0.1.8
+        image: microservicesdemomesh/paymentservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -595,7 +595,7 @@ spec:
           value: "3552"
         - name: PORT
           value: "3550"
-        image: microservicesdemomesh/productcatalogservice:v0.1.8
+        image: microservicesdemomesh/productcatalogservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -659,7 +659,7 @@ spec:
           value: "8080"
         - name: PRODUCT_CATALOG_SERVICE_ADDR
           value: productcatalogservice.hipstershop1:3550
-        image: microservicesdemomesh/recommendationservice:v0.1.8
+        image: microservicesdemomesh/recommendationservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -777,7 +777,7 @@ spec:
           value: "50053"
         - name: PORT
           value: "50051"
-        image: microservicesdemomesh/shippingservice:v0.1.8
+        image: microservicesdemomesh/shippingservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:

@@ -35,7 +35,7 @@ spec:
           value: :9555
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.istio-system:9411
-        image: microservicesdemomesh/adservice2:v0.1.8
+        image: microservicesdemomesh/adservice2:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
@@ -95,7 +95,7 @@ spec:
           value: :9555
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.istio-system:9411
-        image: microservicesdemomesh/adservice2:v0.1.8
+        image: microservicesdemomesh/adservice2:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
@@ -169,7 +169,7 @@ spec:
           value: shippingservice.hipstershopistio:50051
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.istio-system:9411
-        image: microservicesdemomesh/apiservice:v0.1.8
+        image: microservicesdemomesh/apiservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
@@ -230,7 +230,7 @@ spec:
           value: redis-cart.hipstershopistio:6379
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.istio-system:9411
-        image: microservicesdemomesh/cartservice:v0.1.8
+        image: microservicesdemomesh/cartservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -306,7 +306,7 @@ spec:
           value: shippingservice.hipstershopistio:50051
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.istio-system:9411
-        image: microservicesdemomesh/checkoutservice:v0.1.8
+        image: microservicesdemomesh/checkoutservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -380,7 +380,7 @@ spec:
           value: shippingservice.hipstershopistio:50051
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.istio-system:9411
-        image: microservicesdemomesh/checkoutservice:v0.1.8
+        image: microservicesdemomesh/checkoutservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -440,7 +440,7 @@ spec:
           value: "7000"
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.istio-system:9411
-        image: microservicesdemomesh/currencyservice:v0.1.8
+        image: microservicesdemomesh/currencyservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -502,7 +502,7 @@ spec:
           value: "8080"
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.istio-system:9411
-        image: microservicesdemomesh/emailservice:v0.1.8
+        image: microservicesdemomesh/emailservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -578,7 +578,7 @@ spec:
           value: :8080
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.istio-system:9411
-        image: microservicesdemomesh/frontend:v0.1.8
+        image: microservicesdemomesh/frontend:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
@@ -653,7 +653,7 @@ spec:
           value: zipkin.istio-system:9411
         - name: BANNER_COLOR
           value: red
-        image: microservicesdemomesh/frontend:v0.1.8
+        image: microservicesdemomesh/frontend:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
@@ -718,7 +718,7 @@ spec:
           value: "10"
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.istio-system:9411
-        image: microservicesdemomesh/loadgenerator:v0.1.8
+        image: microservicesdemomesh/loadgenerator:v0.1.9
         imagePullPolicy: Always
         name: loadgenerator
         ports:
@@ -766,7 +766,7 @@ spec:
           value: "50051"
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.istio-system:9411
-        image: microservicesdemomesh/paymentservice:v0.1.8
+        image: microservicesdemomesh/paymentservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -828,7 +828,7 @@ spec:
           value: "3550"
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.istio-system:9411
-        image: microservicesdemomesh/productcatalogservice:v0.1.8
+        image: microservicesdemomesh/productcatalogservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -894,7 +894,7 @@ spec:
           value: zipkin.istio-system:9411
         - name: EXTRA_LATENCY
           value: 1.5s
-        image: microservicesdemomesh/productcatalogservice:v0.1.8
+        image: microservicesdemomesh/productcatalogservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -960,7 +960,7 @@ spec:
           value: productcatalogservice.hipstershopistio:3550
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.istio-system:9411
-        image: microservicesdemomesh/recommendationservice:v0.1.8
+        image: microservicesdemomesh/recommendationservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:
@@ -1082,7 +1082,7 @@ spec:
           value: "50051"
         - name: ZIPKIN_SERVICE_ADDR
           value: zipkin.istio-system:9411
-        image: microservicesdemomesh/shippingservice:v0.1.8
+        image: microservicesdemomesh/shippingservice:v0.1.9
         imagePullPolicy: Always
         livenessProbe:
           exec:

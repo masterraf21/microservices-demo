@@ -9,6 +9,7 @@ This was added to demonstrate more use-cases then only internal GRPC calls.
 ```bash
 Usage of ./adservice2:
   -EXTRA_LATENCY=0s: lattency to add to service response
+  -startDelay=0s: delay before service is available (return 503 failed probe)
   -JAEGER_SERVICE_ADDR="": URL to Jaeger Tracing agent
   -ZIPKIN_SERVICE_ADDR="": URL to Zipkin Tracing agent (ex: zipkin:9411)
   -adFile="ads.json": path to the Ads json file
@@ -44,3 +45,7 @@ Tags are keywords used to greate pools of adds. When starting, the `adservice2` 
 `curl http://localhost:9555/ads/vintage` should return  a JSON payload with an array containing all the ads from a category (having the same tag)
 
 It's the clients role to filter/order the ad it needs.
+
+### /healthz
+
+`curl http://localhost:9555/healthz` should return 200 OK or 503 FAIL if the `startDelay` time is not overdue

@@ -13,15 +13,18 @@ Changes includes :
 
 ## Changelog
 
+- 20200703
+   - added a `startDelay` to `adservice` to simulate a slow starting (java) application
+   - tagged release v0.1.9
+- 20200614
+  - `adservice` rewrite in GO + HTTP endpoint + lattency option
+  - added a `service` name to all Zipkin traces
+  - tagged release v0.1.8
 - 20200217
    - added github action to build and publish Docker Images
 - 20200129
   - All Go microservices are updated to use Zipkin and provide a `/metrics` endpoint for metrology
   - Loadgenerator can connect to an HTTPS endpoint
-- 20200614
-  - `adservice` rewrite in GO + HTTP endpoint
-  - added a `service` name to all Zipkin traces
-  - tagged release v0.1.8
 
 ## building images
 Images are built automatically using a Github Action.
@@ -68,14 +71,14 @@ If you’re using this demo, please **★Star** this repository to show your int
 **Hipster Shop** is composed of many microservices written in different
 languages that talk to each other over gRPC.
 
-[![Architecture of
-microservices](./docs/img/architecture-diagram.png)](./docs/img/architecture-diagram.png)
+[![Architecture of microservices](./docs/img/hipstershop-arch.svg)](./docs/img/hipstershop-arch.svg)
 
 Find **Protocol Buffers Descriptions** at the [`./pb` directory](./pb).
 
 | Service                                              | Language      | Description                                                                                                                       |
 | ---------------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | [frontend](./src/frontend)                           | Go            | Exposes an HTTP server to serve the website. Does not require signup/login and generates session IDs for all users automatically. |
+| [apiservice](./src/apiservice)                       | Go            | A stripped down version of the Frontend that only return Json of the store's data, without any HTML.                              |
 | [cartservice](./src/cartservice)                     | C#            | Stores the items in the user's shopping cart in Redis and retrieves it.                                                           |
 | [productcatalogservice](./src/productcatalogservice) | Go            | Provides the list of products from a JSON file and ability to search products and get individual products.                        |
 | [currencyservice](./src/currencyservice)             | Node.js       | Converts one money amount to another currency. Uses real values fetched from European Central Bank. It's the highest QPS service. |
@@ -84,7 +87,8 @@ Find **Protocol Buffers Descriptions** at the [`./pb` directory](./pb).
 | [emailservice](./src/emailservice)                   | Python        | Sends users an order confirmation email (mock).                                                                                   |
 | [checkoutservice](./src/checkoutservice)             | Go            | Retrieves user cart, prepares order and orchestrates the payment, shipping and the email notification.                            |
 | [recommendationservice](./src/recommendationservice) | Python        | Recommends other products based on what's given in the cart.                                                                      |
-| [adservice](./src/adservice)                         | Java          | Provides text ads based on given context words.                                                                                   |
+| [adservice](./src/adservice)                         | Java          | Deprecated, use Go version - Provides text ads based on given context words.                                                      |
+| [adservice2](./src/adservice2)                       | Go            | Provides text ads based on given context words (Originally was a Java app).                                                       |
 | [loadgenerator](./src/loadgenerator)                 | Python/Locust | Continuously sends requests imitating realistic user shopping flows to the frontend.                                              |
 
 ## Features
