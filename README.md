@@ -15,6 +15,7 @@ Changes includes :
 
 - 20200703
    - added a `startDelay` to `adservice` to simulate a slow starting (java) application
+   - added a `consecutiveError` to `adservice` to simulate a number of 500 errors before answering
    - tagged release v0.1.9
 - 20200614
   - `adservice` rewrite in GO + HTTP endpoint + lattency option

@@ -48,10 +48,11 @@ var (
 	srvURL         = flag.String("srvURL", ":9555", "IP and port to bind, localhost:9555 or :9555")
 	adFile         = flag.String("adFile", "ads.json", "path to the Ads json file")
 
-	jaegerSvcAddr = flag.String("JAEGER_SERVICE_ADDR", "", "URL to Jaeger Tracing agent")
-	zipkinSvcAddr = flag.String("ZIPKIN_SERVICE_ADDR", "", "URL to Zipkin Tracing agent (ex: zipkin:9411)")
-	extraLatency  = flag.Duration("EXTRA_LATENCY", 0*time.Second, "lattency to add to service response")
-	startDelay    = flag.Duration("startDelay", 0*time.Second, "delay before service is available (return 503 failed probe)")
+	jaegerSvcAddr    = flag.String("JAEGER_SERVICE_ADDR", "", "URL to Jaeger Tracing agent")
+	zipkinSvcAddr    = flag.String("ZIPKIN_SERVICE_ADDR", "", "URL to Zipkin Tracing agent (ex: zipkin:9411)")
+	extraLatency     = flag.Duration("EXTRA_LATENCY", 0*time.Second, "lattency to add to service response")
+	startDelay       = flag.Duration("startDelay", 0*time.Second, "delay before service is available (return 503 failed probe)")
+	consecutiveError = flag.Int("consecutiveError", 0, "number of error 500 to return before answering the call")
 )
 
 func printVersion() {
@@ -98,8 +99,10 @@ func main() {
 	readyTime := time.Now().Add(*startDelay)
 
 	a := &adserviceServer{
-		adFile:   *adFile,
-		adsIndex: make(map[string][]int),
+		adFile:      *adFile,
+		adsIndex:    make(map[string][]int),
+		failCounter: 0,
+		failCount:   *consecutiveError,
 	}
 
 	err = a.loadAdsFile()

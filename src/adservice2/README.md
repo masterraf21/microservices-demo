@@ -10,6 +10,7 @@ This was added to demonstrate more use-cases then only internal GRPC calls.
 Usage of ./adservice2:
   -EXTRA_LATENCY=0s: lattency to add to service response
   -startDelay=0s: delay before service is available (return 503 failed probe)
+  -consecutiveError=0: number of error 500 to return before answering the call
   -JAEGER_SERVICE_ADDR="": URL to Jaeger Tracing agent
   -ZIPKIN_SERVICE_ADDR="": URL to Zipkin Tracing agent (ex: zipkin:9411)
   -adFile="ads.json": path to the Ads json file
@@ -49,3 +50,10 @@ It's the clients role to filter/order the ad it needs.
 ### /healthz
 
 `curl http://localhost:9555/healthz` should return 200 OK or 503 FAIL if the `startDelay` time is not overdue
+
+### Errors
+
+when `--consecutiveError=N` is set (ex: `--consecutiveError=3`), calls to `/ad` or `/ads/xxx` will be answered with an error 500 `N` times before the real answer is returned.
+If `--consecutiveError=1`, 50% of the requests will be error 500
+
+This is used to demo the Istio `retry` and `circuit-breaker` behaviours.

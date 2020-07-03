@@ -23,22 +23,43 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// isReturnError returns true until the error counter is at zero
+// if we configure consecutiveError to be 3, we will return true 3 times, then false
+func (a *adserviceServer) isReturnError() bool {
+	a.Lock()
+	defer a.Unlock()
+	if a.failCounter > 0 {
+		a.failCounter--
+		return true
+	}
+	a.failCounter = a.failCount
+	return false
+}
+
 // randomAdHandler return a random add
 // r.HandleFunc("/ad", a.randomAdHandler)
 func (a *adserviceServer) randomAdHandler(w http.ResponseWriter, r *http.Request) {
-	ads := a.getRandomAds()
+	if a.isReturnError() {
+		respondWithError(w, http.StatusInternalServerError, "error forced by consecutiveError counter")
+		return
+	}
 
+	ads := a.getRandomAds()
 	respondWithJSON(w, http.StatusOK, ads)
 }
 
 // categoryAdHandler return all ads from a category
 // r.HandleFunc("/ads/{category}", a.categoryAdHandler)
 func (a *adserviceServer) categoryAdHandler(w http.ResponseWriter, r *http.Request) {
+	if a.isReturnError() {
+		respondWithError(w, http.StatusInternalServerError, "error forced by consecutiveError counter")
+		return
+	}
+
 	vars := mux.Vars(r)
 	cat := vars["category"]
 
 	ads := a.getAdsByCategory(cat)
-
 	respondWithJSON(w, http.StatusOK, ads)
 }
 

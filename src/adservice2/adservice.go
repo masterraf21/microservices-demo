@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"sync"
 	"time"
 )
 
@@ -29,9 +30,13 @@ type Ad struct {
 }
 
 type adserviceServer struct {
-	adFile   string
-	ads      []Ad
-	adsIndex map[string][]int
+	adFile      string
+	ads         []Ad
+	adsIndex    map[string][]int
+	failCounter int
+	failCount   int
+
+	sync.Mutex
 }
 
 func (a *adserviceServer) loadAdsFile() error {
