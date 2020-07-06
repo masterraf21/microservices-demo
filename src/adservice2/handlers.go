@@ -40,7 +40,7 @@ func (a *adserviceServer) isReturnError() bool {
 // r.HandleFunc("/ad", a.randomAdHandler)
 func (a *adserviceServer) randomAdHandler(w http.ResponseWriter, r *http.Request) {
 	if a.isReturnError() {
-		respondWithError(w, http.StatusInternalServerError, "error forced by consecutiveError counter")
+		respondWithError(w, http.StatusServiceUnavailable, "error forced by consecutiveError counter")
 		return
 	}
 
@@ -52,7 +52,7 @@ func (a *adserviceServer) randomAdHandler(w http.ResponseWriter, r *http.Request
 // r.HandleFunc("/ads/{category}", a.categoryAdHandler)
 func (a *adserviceServer) categoryAdHandler(w http.ResponseWriter, r *http.Request) {
 	if a.isReturnError() {
-		respondWithError(w, http.StatusInternalServerError, "error forced by consecutiveError counter")
+		respondWithError(w, http.StatusServiceUnavailable, "error forced by consecutiveError counter")
 		return
 	}
 

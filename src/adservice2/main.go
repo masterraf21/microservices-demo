@@ -52,6 +52,7 @@ var (
 	zipkinSvcAddr    = flag.String("ZIPKIN_SERVICE_ADDR", "", "URL to Zipkin Tracing agent (ex: zipkin:9411)")
 	extraLatency     = flag.Duration("EXTRA_LATENCY", 0*time.Second, "lattency to add to service response")
 	startDelay       = flag.Duration("startDelay", 0*time.Second, "delay before service is available (return 503 failed probe)")
+	bindDelay        = flag.Duration("bindDelay", 0*time.Second, "delay before binding the service port at startup")
 	consecutiveError = flag.Int("consecutiveError", 0, "number of error 500 to return before answering the call")
 )
 
@@ -96,7 +97,7 @@ func main() {
 		log.Infof("start delay enabled (duration: %v)", *startDelay)
 	}
 	// ready time
-	readyTime := time.Now().Add(*startDelay)
+	readyTime := time.Now().Add(*startDelay).Add(*bindDelay)
 
 	a := &adserviceServer{
 		adFile:      *adFile,
@@ -152,6 +153,11 @@ func main() {
 	}
 
 	go func() {
+		if *bindDelay > 0 {
+			log.Infof("bind delay enabled, waiting %v before opening %s )", *bindDelay, *srvURL)
+			time.Sleep(*bindDelay)
+		}
+
 		log.Infof("starting server on %s", *srvURL)
 		log.Fatal(srv.ListenAndServe())
 	}()

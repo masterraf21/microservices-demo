@@ -13,10 +13,12 @@ Changes includes :
 
 ## Changelog
 
+- 20200706
+   - added a `bindDelay` option to `adservice2` to allow a delay before binding the IP/port
+   - tagged release v0.1.9
 - 20200703
    - added a `startDelay` to `adservice` to simulate a slow starting (java) application
-   - added a `consecutiveError` to `adservice` to simulate a number of 500 errors before answering
-   - tagged release v0.1.9
+   - added a `consecutiveError` to `adservice` to simulate a number of 503 errors before answering
 - 20200614
   - `adservice` rewrite in GO + HTTP endpoint + lattency option
   - added a `service` name to all Zipkin traces

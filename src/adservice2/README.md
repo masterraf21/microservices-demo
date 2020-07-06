@@ -10,6 +10,7 @@ This was added to demonstrate more use-cases then only internal GRPC calls.
 Usage of ./adservice2:
   -EXTRA_LATENCY=0s: lattency to add to service response
   -startDelay=0s: delay before service is available (return 503 failed probe)
+  -bindDelay=0s: delay before binding the service port at startup
   -consecutiveError=0: number of error 500 to return before answering the call
   -JAEGER_SERVICE_ADDR="": URL to Jaeger Tracing agent
   -ZIPKIN_SERVICE_ADDR="": URL to Zipkin Tracing agent (ex: zipkin:9411)
@@ -47,13 +48,17 @@ Tags are keywords used to greate pools of adds. When starting, the `adservice2` 
 
 It's the clients role to filter/order the ad it needs.
 
-### /healthz
-
-`curl http://localhost:9555/healthz` should return 200 OK or 503 FAIL if the `startDelay` time is not overdue
-
 ### Errors
 
-when `--consecutiveError=N` is set (ex: `--consecutiveError=3`), calls to `/ad` or `/ads/xxx` will be answered with an error 500 `N` times before the real answer is returned.
-If `--consecutiveError=1`, 50% of the requests will be error 500
+when `--consecutiveError=N` is set (ex: `--consecutiveError=3`), calls to `/ad` or `/ads/xxx` will be answered with an error 503 `N` times before the real answer is returned.
+If `--consecutiveError=1`, 50% of the requests will be error 503
 
 This is used to demo the Istio `retry` and `circuit-breaker` behaviours.
+
+### Delays
+Use `--bindDelay=10s` to delay the start of the server by 10s. During this time the process is running but no network port is opened, so connections attempts will return a `can't connect` error.
+
+Use `--startDelay=10s`to delay the `liveness` by 10s. During this time every Healthz request will get an HTTP error 503.
+You can test this by using curl: `curl http://localhost:9555/healthz`
+
+> The `startDelay` time is *ADDED* to the `bindDelay`
