@@ -24,7 +24,7 @@
   _config+:: {
     image: {
       repo: "microservicesdemomesh",
-      tag: "v0.1.8",
+      tag: "v0.1.9",
     },
     // define defaults values to add to each micro-service
     default+: {
