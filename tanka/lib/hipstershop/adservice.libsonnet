@@ -20,7 +20,11 @@
       labels: {app: "adservice"},
       env: {
         SRVURL: ":%s" % $._config.adservice.port,
-        LOGLEVEL: "debug"
+        LOGLEVEL: "debug",
+        BINDDELAY: "0s",
+        STARTDELAY: "0s",
+        CONSECUTIVEERROR: "0",
+        EXTRA_LATENCY: "0s"
         },
       readinessProbe: container.mixin.readinessProbe.httpGet.withPath("/healthz")
         + container.mixin.readinessProbe.httpGet.withPort(self.port),
