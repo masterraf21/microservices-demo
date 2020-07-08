@@ -43,15 +43,14 @@ if [[ -n "${FRONTEND_IP}" ]]; then
     SNI_OPTS="--resolve ${host}:${port}:${FRONTEND_IP}"
 fi
 
-
-
-# if one request to the frontend fails, then exit
-STATUSCODE=$(curl -k --silent --output /dev/stderr --write-out "%{http_code}" ${SNI_OPTS} ${FRONTEND_ADDR})
-if test $STATUSCODE -ne 200; then
-    echo "Error: Could not reach frontend - Status code: ${STATUSCODE}"
-    curl -v -k --silent --output /dev/stderr --write-out "%{http_code}" ${SNI_OPTS} ${FRONTEND_ADDR}
-    exit 1
-fi
+# if 5 request to the frontend fails, then exit
+statusCommand="curl -k --silent --output /dev/stderr --write-out %{http_code} ${SNI_OPTS} ${FRONTEND_ADDR}"
+cnt=1
+while [[ `$statusCommand` != 200 ]] && [[ $cnt -le 5 ]]; do
+    echo "waiting for network to be ready"
+	sleep 1
+	(( cnt++ ))
+done
 
 # else, run loadgen
 locust --host="${FRONTEND_ADDR}" --no-web -c "${USERS:-10}" 2>&1
