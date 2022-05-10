@@ -141,9 +141,9 @@ func (s *server) GetQuote(ctx context.Context, in *pb.GetQuoteRequest) (*pb.GetQ
 		CostUsd: &pb.Money{
 			CurrencyCode: "USD",
 			Units:        int64(quote.Dollars),
-			Nanos:        int32(quote.Cents * 10000000)},
+			Nanos:        int32(quote.Cents * 10000000),
+		},
 	}, nil
-
 }
 
 // ShipOrder mocks that the requested items will be shipped.
@@ -192,7 +192,7 @@ func initZipkinTracing() {
 		return
 	}
 
-	endpoint, err := openzipkin.NewEndpoint("emailservice", "")
+	endpoint, err := openzipkin.NewEndpoint("shippingservice", "")
 	if err != nil {
 		log.Fatalf("unable to create local endpoint: %+v\n", err)
 	}

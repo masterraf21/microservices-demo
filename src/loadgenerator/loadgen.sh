@@ -53,4 +53,4 @@ while [[ `$statusCommand` != 200 ]] && [[ $cnt -le 5 ]]; do
 done
 
 # else, run loadgen
-locust --host="${FRONTEND_ADDR}" --web-auth admin:locust-master 2>&1
+locust --host="${FRONTEND_ADDR}" --web-auth admin:admin 2>&1
