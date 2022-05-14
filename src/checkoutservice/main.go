@@ -48,7 +48,10 @@ const (
 	usdCurrency      = "USD"
 )
 
-var log *logrus.Logger
+var (
+	log          *logrus.Logger
+	extraLatency time.Duration
+)
 
 func init() {
 	log = logrus.New()
@@ -79,6 +82,18 @@ func main() {
 	port := listenPort
 	if os.Getenv("PORT") != "" {
 		port = os.Getenv("PORT")
+	}
+
+	// set injected latency
+	if s := os.Getenv("EXTRA_LATENCY"); s != "" {
+		v, err := time.ParseDuration(s)
+		if err != nil {
+			log.Fatalf("failed to parse EXTRA_LATENCY (%s) as time.Duration: %+v", v, err)
+		}
+		extraLatency = v
+		log.Infof("extra latency enabled (duration: %v)", extraLatency)
+	} else {
+		extraLatency = time.Duration(0)
 	}
 
 	svc := new(checkoutService)
@@ -226,6 +241,7 @@ func (cs *checkoutService) Watch(req *healthpb.HealthCheckRequest, ws healthpb.H
 }
 
 func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (*pb.PlaceOrderResponse, error) {
+	time.Sleep(extraLatency)
 	log.Infof("[PlaceOrder] user_id=%q user_currency=%q", req.UserId, req.UserCurrency)
 
 	orderID, err := uuid.NewUUID()
@@ -238,9 +254,11 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	total := pb.Money{CurrencyCode: req.UserCurrency,
-		Units: 0,
-		Nanos: 0}
+	total := pb.Money{
+		CurrencyCode: req.UserCurrency,
+		Units:        0,
+		Nanos:        0,
+	}
 	total = money.Must(money.Sum(total, *prep.shippingCostLocalized))
 	for _, it := range prep.orderItems {
 		total = money.Must(money.Sum(total, *it.Cost))
@@ -272,6 +290,7 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 	} else {
 		log.Infof("order confirmation email sent to %q", req.Email)
 	}
+
 	resp := &pb.PlaceOrderResponse{Order: orderResult}
 	return resp, nil
 }
@@ -319,7 +338,8 @@ func (cs *checkoutService) quoteShipping(ctx context.Context, address *pb.Addres
 	shippingQuote, err := pb.NewShippingServiceClient(conn).
 		GetQuote(ctx, &pb.GetQuoteRequest{
 			Address: address,
-			Items:   items})
+			Items:   items,
+		})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get shipping quote: %+v", err)
 	}
@@ -374,7 +394,8 @@ func (cs *checkoutService) prepOrderItems(ctx context.Context, items []*pb.CartI
 		}
 		out[i] = &pb.OrderItem{
 			Item: item,
-			Cost: price}
+			Cost: price,
+		}
 	}
 	return out, nil
 }
@@ -387,7 +408,8 @@ func (cs *checkoutService) convertCurrency(ctx context.Context, from *pb.Money, 
 	defer conn.Close()
 	result, err := pb.NewCurrencyServiceClient(conn).Convert(context.TODO(), &pb.CurrencyConversionRequest{
 		From:   from,
-		ToCode: toCurrency})
+		ToCode: toCurrency,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert currency: %+v", err)
 	}
@@ -403,7 +425,8 @@ func (cs *checkoutService) chargeCard(ctx context.Context, amount *pb.Money, pay
 
 	paymentResp, err := pb.NewPaymentServiceClient(conn).Charge(ctx, &pb.ChargeRequest{
 		Amount:     amount,
-		CreditCard: paymentInfo})
+		CreditCard: paymentInfo,
+	})
 	if err != nil {
 		return "", fmt.Errorf("could not charge the card: %+v", err)
 	}
@@ -418,7 +441,8 @@ func (cs *checkoutService) sendOrderConfirmation(ctx context.Context, email stri
 	defer conn.Close()
 	_, err = pb.NewEmailServiceClient(conn).SendOrderConfirmation(ctx, &pb.SendOrderConfirmationRequest{
 		Email: email,
-		Order: order})
+		Order: order,
+	})
 	return err
 }
 
@@ -430,7 +454,8 @@ func (cs *checkoutService) shipOrder(ctx context.Context, address *pb.Address, i
 	defer conn.Close()
 	resp, err := pb.NewShippingServiceClient(conn).ShipOrder(ctx, &pb.ShipOrderRequest{
 		Address: address,
-		Items:   items})
+		Items:   items,
+	})
 	if err != nil {
 		return "", fmt.Errorf("shipment failed: %+v", err)
 	}

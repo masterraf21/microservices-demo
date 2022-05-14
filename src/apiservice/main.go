@@ -35,6 +35,7 @@ import (
 	"contrib.go.opencensus.io/exporter/jaeger"
 	"contrib.go.opencensus.io/exporter/prometheus"
 	"contrib.go.opencensus.io/exporter/zipkin"
+	openzipkin "github.com/openzipkin/zipkin-go"
 	zipkinhttp "github.com/openzipkin/zipkin-go/reporter/http"
 )
 
@@ -56,7 +57,8 @@ var (
 		"CAD": true,
 		"JPY": true,
 		"GBP": true,
-		"TRY": true}
+		"TRY": true,
+	}
 	apiPath = ""
 )
 
@@ -153,14 +155,14 @@ func main() {
 	handler = ensureSessionID(handler)             // add session ID
 	handler = &ochttp.Handler{                     // add opencensus instrumentation
 		Handler:     handler,
-		Propagation: &b3.HTTPFormat{}}
+		Propagation: &b3.HTTPFormat{},
+	}
 
 	log.Infof("starting server on " + addr + ":" + srvPort)
 	log.Fatal(http.ListenAndServe(addr+":"+srvPort, handler))
 }
 
 func initJaegerTracing(log logrus.FieldLogger) {
-
 	svcAddr := os.Getenv("JAEGER_SERVICE_ADDR")
 	if svcAddr == "" {
 		log.Info("jaeger initialization disabled.")
@@ -191,8 +193,12 @@ func initZipkinTracing(log logrus.FieldLogger) {
 		return
 	}
 
+	endpoint, err := openzipkin.NewEndpoint("apiservice", "")
+	if err != nil {
+		log.Fatalf("unable to create local endpoint: %+v\n", err)
+	}
 	reporter := zipkinhttp.NewReporter(fmt.Sprintf("http://%s/api/v2/spans", svcAddr))
-	exporter := zipkin.NewExporter(reporter, nil)
+	exporter := zipkin.NewExporter(reporter, endpoint)
 	trace.RegisterExporter(exporter)
 
 	log.Info("zipkin initialization completed.")

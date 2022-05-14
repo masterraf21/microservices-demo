@@ -43,26 +43,37 @@ from logger import getJSONLogger
 logger = getJSONLogger('recommendationservice-server')
 
 # Setup Zipkin exporter
-try: 
-  zipkin_service_addr = os.environ.get("ZIPKIN_SERVICE_ADDR", '')
-  if zipkin_service_addr == "":
-    logger.info("Skipping Zipkin traces initialization. Set environment variable ZIPKIN_SERVICE_ADDR=<host>:<port> to enable.")
-    raise KeyError()
-  host, port = zipkin_service_addr.split(":")
-  ze = ZipkinExporter(
-    service_name="recommendationservice-server",
-    host_name=host,
-    port=int(port),
-    endpoint='/api/v2/spans')
-  sampler = AlwaysOnSampler()
-  tracer = Tracer(exporter=ze, sampler=sampler)
-  tracer_interceptor = server_interceptor.OpenCensusServerInterceptor(sampler, ze)
-  logger.info("Zipkin traces enabled, sending to " + zipkin_service_addr)
+try:
+    zipkin_service_addr = os.environ.get("ZIPKIN_SERVICE_ADDR", '')
+    if zipkin_service_addr == "":
+        logger.info(
+            "Skipping Zipkin traces initialization. Set environment variable ZIPKIN_SERVICE_ADDR=<host>:<port> to enable.")
+        raise KeyError()
+    host, port = zipkin_service_addr.split(":")
+    ze = ZipkinExporter(
+        service_name="recommendationservice-server",
+        host_name=host,
+        port=int(port),
+        endpoint='/api/v2/spans')
+    sampler = AlwaysOnSampler()
+    tracer = Tracer(exporter=ze, sampler=sampler)
+    tracer_interceptor = server_interceptor.OpenCensusServerInterceptor(
+        sampler, ze)
+    logger.info("Zipkin traces enabled, sending to " + zipkin_service_addr)
 except KeyError:
-  tracer_interceptor = server_interceptor.OpenCensusServerInterceptor()
+    tracer_interceptor = server_interceptor.OpenCensusServerInterceptor()
+
 
 class RecommendationService(demo_pb2_grpc.RecommendationServiceServicer):
+    # TODO
     def ListRecommendations(self, request, context):
+        extraLatency = os.environ.get('EXTRA_LATENCY')
+        if not extraLatency:
+            extraLatency = 0
+        else:
+            extraLatency = int(extraLatency)
+        time.sleep(extraLatency/1000)
+
         max_responses = 5
         # fetch list of products from product catalog stub
         cat_response = product_catalog_stub.ListProducts(demo_pb2.Empty())
@@ -74,7 +85,8 @@ class RecommendationService(demo_pb2_grpc.RecommendationServiceServicer):
         indices = random.sample(range(num_products), num_return)
         # fetch product ids from indices
         prod_list = [filtered_products[i] for i in indices]
-        logger.info("[Recv ListRecommendations] product_ids={}".format(prod_list))
+        logger.info(
+            "[Recv ListRecommendations] product_ids={}".format(prod_list))
         # build and return response
         response = demo_pb2.ListRecommendationsResponse()
         response.product_ids.extend(prod_list)
@@ -92,14 +104,15 @@ if __name__ == "__main__":
     healthPort = os.environ.get('HEALTH_PORT', "8081")
     catalog_addr = os.environ.get('PRODUCT_CATALOG_SERVICE_ADDR', '')
     if catalog_addr == "":
-        raise Exception('PRODUCT_CATALOG_SERVICE_ADDR environment variable not set')
+        raise Exception(
+            'PRODUCT_CATALOG_SERVICE_ADDR environment variable not set')
     logger.info("product catalog address: " + catalog_addr)
     channel = grpc.insecure_channel(catalog_addr)
     product_catalog_stub = demo_pb2_grpc.ProductCatalogServiceStub(channel)
 
     # create gRPC server
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),
-                      interceptors=(tracer_interceptor,))
+                         interceptors=(tracer_interceptor,))
     healthServer = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
 
     # add class to gRPC server
@@ -117,8 +130,8 @@ if __name__ == "__main__":
     healthServer.start()
     # keep alive
     try:
-         while True:
+        while True:
             time.sleep(10000)
     except KeyboardInterrupt:
-            server.stop(0)
-            healthServer.stop(0)
+        server.stop(0)
+        healthServer.stop(0)

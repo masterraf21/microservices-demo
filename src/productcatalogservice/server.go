@@ -263,6 +263,7 @@ func (p *productCatalog) ListProducts(context.Context, *pb.Empty) (*pb.ListProdu
 	return &pb.ListProductsResponse{Products: parseCatalog()}, nil
 }
 
+// TODO
 func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.Product, error) {
 	time.Sleep(extraLatency)
 	var found *pb.Product

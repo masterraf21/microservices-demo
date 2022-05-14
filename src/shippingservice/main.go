@@ -47,7 +47,10 @@ const (
 	healthPort  = "50053"
 )
 
-var log *logrus.Logger
+var (
+	log          *logrus.Logger
+	extraLatency time.Duration
+)
 
 func init() {
 	log = logrus.New()
@@ -65,6 +68,18 @@ func init() {
 
 func main() {
 	go initTracing()
+
+	// set injected latency
+	if s := os.Getenv("EXTRA_LATENCY"); s != "" {
+		v, err := time.ParseDuration(s)
+		if err != nil {
+			log.Fatalf("failed to parse EXTRA_LATENCY (%s) as time.Duration: %+v", v, err)
+		}
+		extraLatency = v
+		log.Infof("extra latency enabled (duration: %v)", extraLatency)
+	} else {
+		extraLatency = time.Duration(0)
+	}
 
 	port := defaultPort
 	if value, ok := os.LookupEnv("PORT"); ok {
@@ -122,8 +137,10 @@ func (s *server) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_Watc
 	return status.Errorf(codes.Unimplemented, "health check via Watch not implemented")
 }
 
+// TODO
 // GetQuote produces a shipping quote (cost) in USD.
 func (s *server) GetQuote(ctx context.Context, in *pb.GetQuoteRequest) (*pb.GetQuoteResponse, error) {
+	time.Sleep(extraLatency)
 	log.Info("[GetQuote] received request")
 	defer log.Info("[GetQuote] completed request")
 
