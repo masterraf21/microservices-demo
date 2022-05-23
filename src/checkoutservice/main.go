@@ -51,6 +51,7 @@ const (
 var (
 	log          *logrus.Logger
 	extraLatency time.Duration
+	extraCPUTask bool
 )
 
 func init() {
@@ -82,6 +83,14 @@ func main() {
 	port := listenPort
 	if os.Getenv("PORT") != "" {
 		port = os.Getenv("PORT")
+	}
+
+	// set extra cpu latency
+	if s := os.Getenv("EXTRA_CPU_TASK"); s != "" {
+		if s == "1" {
+			extraCPUTask = true
+			log.Info("extra cpu task enabled")
+		}
 	}
 
 	// set injected latency
@@ -240,7 +249,24 @@ func (cs *checkoutService) Watch(req *healthpb.HealthCheckRequest, ws healthpb.H
 	return status.Errorf(codes.Unimplemented, "health check via Watch not implemented")
 }
 
+func printVar(p *int64) {
+	fmt.Printf("print x = %d.\n", *p)
+}
+
+func cpuIntensive(p *int64) {
+	for i := int64(1); i <= 10000000; i++ {
+		*p = i
+	}
+	fmt.Println("Done intensive thing")
+}
+
+// TODO
 func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (*pb.PlaceOrderResponse, error) {
+	if extraCPUTask {
+		x := int64(0)
+		cpuIntensive(&x)
+		printVar(&x)
+	}
 	time.Sleep(extraLatency)
 	log.Infof("[PlaceOrder] user_id=%q user_currency=%q", req.UserId, req.UserCurrency)
 
